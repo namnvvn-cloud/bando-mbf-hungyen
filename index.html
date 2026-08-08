@@ -377,7 +377,40 @@
     .filter-row input, .filter-row select{font-size:14px;padding:8px 10px;}
     table.data-table{font-size:12px;}
     .btn{font-size:13.5px;padding:8px 12px;}
+    /* Trên điện thoại thì mã QR vô nghĩa (đang cầm đúng cái máy cần cài) -> giấu đi cho gọn */
+    .apk-box{flex-direction:column;}
+    .apk-qr{display:none;}
+    .apk-btn{font-size:16px;padding:14px 16px;}
   }
+
+/* ---- Khối cài app Android (GĐ8 08/08/2026) ---- */
+.apk-box{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--mf-border);
+  border-radius:10px;padding:14px;margin:0 0 14px;background:linear-gradient(180deg,#f7faff,#eef4ff);}
+.apk-main{flex:1;min-width:0;}
+.apk-title{font-weight:700;font-size:14.5px;color:var(--mf-blue-dark);margin-bottom:6px;}
+.apk-tag{display:inline-block;font-size:10.5px;font-weight:600;background:#0a3d91;color:#fff;
+  border-radius:10px;padding:2px 8px;vertical-align:middle;margin-left:4px;}
+.apk-may{font-size:12.5px;margin-bottom:10px;line-height:1.6;}
+.apk-may.ok{color:#1a7f3c;font-weight:600;}
+.apk-may.khong{color:#b25b00;}
+.apk-btn{display:inline-block;text-decoration:none;font-size:14.5px;padding:11px 18px;}
+.apk-btn.mo{opacity:.5;pointer-events:none;}
+.apk-steps{display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.65;margin-top:12px;color:#33415c;}
+.apk-steps .apk-note{color:var(--mf-muted);font-size:11.5px;margin-top:4px;}
+.apk-qr{width:170px;flex:0 0 170px;text-align:center;}
+.apk-qr-img{width:150px;height:150px;margin:0 auto;background:#fff;padding:6px;
+  border:1px solid var(--mf-border);border-radius:8px;box-sizing:content-box;}
+.apk-qr-cap{font-size:11px;color:var(--mf-muted);line-height:1.5;margin-top:6px;}
+
+/* Dải nhắc cài app, chỉ hiện khi mở bằng trình duyệt Android (không hiện khi đã ở trong app) */
+#apkNhac{position:fixed;left:10px;right:10px;bottom:10px;z-index:2600;display:none;
+  background:#0a3d91;color:#fff;border-radius:10px;padding:11px 13px;
+  box-shadow:0 6px 20px rgba(0,0,0,.3);align-items:center;gap:10px;font-size:13px;}
+#apkNhac.hien{display:flex;}
+#apkNhac .txt{flex:1;line-height:1.5;}
+#apkNhac a{background:#fff;color:#0a3d91;font-weight:700;text-decoration:none;
+  border-radius:7px;padding:8px 12px;white-space:nowrap;}
+#apkNhac button{background:transparent;border:0;color:#cfe0ff;font-size:18px;cursor:pointer;padding:0 4px;}
 </style>
 </head>
 <body>
@@ -1036,16 +1069,27 @@
             <div class="small-note" style="margin-bottom:4px;font-weight:600;">4) PAKH</div>
             <p style="font-size:13px;line-height:1.7;margin:0 0 10px;">Tạo phản ánh, xem dashboard, nhập kết quả kiểm tra (cần Editor/Admin để tạo/lưu).</p>
             <div class="small-note" style="margin-bottom:14px;">💡 Góc dưới trái bản đồ: chuyển nền Đường phố / Vệ tinh.</div>
-            <div class="small-note" style="margin-bottom:4px;font-weight:600;">5) App Android "MobiFone Đo Sóng" (đọc số liệu sóng thật: Cell ID, PCI, tần số, RSRP, RSRQ, SINR...)</div>
-            <p style="font-size:13px;line-height:1.7;margin:0 0 8px;">Trình duyệt web (kể cả trên Android) không có quyền đọc thông số vô tuyến của modem — đây là giới hạn của nền tảng web, không phải thiếu quyền hay lỗi trang. Chỉ có app Android riêng mới đọc được đầy đủ. <b>Trên iPhone: không có cách nào</b> (Apple chặn từ iOS 8.3) — phải xem thủ công qua Field Test Mode (quay số <code>*3001#12345#*</code>) rồi nhập tay vào mục "📶 Đo sóng".</p>
-            <p style="font-size:13px;line-height:1.7;margin:0 0 8px;">App "MobiFone Đo Sóng" (Android) đã có sẵn mã nguồn, <b>chưa build ra file cài đặt (APK)</b>. Các bước build (chi tiết trong README kèm mã nguồn):</p>
-            <p style="font-size:13px;line-height:1.7;margin:0 0 10px;">
-              1. Cài Android Studio (bản Ladybug trở lên): <a href="https://developer.android.com/studio" target="_blank" rel="noopener">developer.android.com/studio</a><br>
-              2. File → Open → chọn thư mục mã nguồn <code>mobifone-do-song</code>, chờ Gradle sync (5–15 phút lần đầu)<br>
-              3. Build → Build Bundle(s)/APK(s) → Build APK(s) → file ở <code>app/build/outputs/apk/debug/app-debug.apk</code><br>
-              4. Chép file APK vào máy cán bộ hiện trường, mở để cài (Android sẽ hỏi cho phép "Cài ứng dụng không rõ nguồn gốc" — bình thường với app nội bộ)
-            </p>
-            <div class="small-note" style="margin-bottom:14px;">Khi có bản APK chính thức, sẽ bổ sung nút tải trực tiếp tại đây.</div>
+            <div class="small-note" style="margin-bottom:4px;font-weight:600;">5) App Android "MobiFone Đo Sóng" — cài trực tiếp từ đây</div>
+            <p style="font-size:13px;line-height:1.7;margin:0 0 10px;">Trình duyệt web (kể cả trên Android) không đọc được thông số vô tuyến của modem — đây là chặn cứng của nền tảng web, không phải thiếu quyền. App riêng đọc được đầy đủ <b>Cell ID, PCI, TAC, tần số, băng tần, RSRP, RSRQ, SINR, ô lân cận</b>, tự làm mới mỗi 3 giây, và có nút ghim thẳng số liệu vào bản đồ. <b>Trên iPhone không có cách nào</b> (Apple chặn từ iOS 8.3) — phải xem thủ công qua Field Test Mode (quay số <code>*3001#12345#*</code>) rồi nhập tay ở mục "📶 Đo sóng".</p>
+
+            <div id="apkBox" class="apk-box">
+              <div class="apk-main">
+                <div class="apk-title">📲 MobiFone Đo Sóng <span class="apk-tag">Android 8.0 trở lên</span></div>
+                <div id="apkMay" class="apk-may"></div>
+                <a id="apkTai" class="btn btn-primary apk-btn" href="https://github.com/namnvvn-cloud/bando-mbf-hungyen/releases/latest/download/MobiFone-Do-Song.apk" download>⬇ Tải &amp; cài app (2,4 MB)</a>
+                <div class="apk-steps" id="apkSteps">
+                  <b>Đúng 3 chạm:</b>
+                  <span>1. Bấm nút trên → Chrome hỏi "Tải xuống tệp này?" thì chọn <b>Tải xuống</b>.</span>
+                  <span>2. Bấm vào thông báo tải xong → Android hỏi cho phép cài từ Chrome thì gạt <b>Cho phép</b> (chỉ hỏi 1 lần đầu).</span>
+                  <span>3. Bấm <b>Cài đặt</b> → xong. Mở app, cho phép <b>Vị trí (Chính xác)</b> là đọc được sóng.</span>
+                  <span class="apk-note">Android không cho phép trang web tự cài app — 3 bước trên là mức tối giản mà hệ điều hành cho phép. App tự ký nội bộ nên máy sẽ báo "không rõ nguồn gốc", đây là bình thường.</span>
+                </div>
+              </div>
+              <div class="apk-qr" id="apkQr">
+                <div class="apk-qr-img"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="100%" height="100%" role="img" aria-label="Ma QR tai app MobiFone Do Song" class="segno"><g transform="scale(4)"><path fill="#fff" d="M0 0h45v45h-45z"/><path class="qrline" stroke="#0a3d91" d="M2 2.5h7m5 0h2m2 0h6m1 0h1m4 0h1m2 0h2m1 0h7m-41 1h1m5 0h1m2 0h2m2 0h1m1 0h3m2 0h2m2 0h1m2 0h4m1 0h1m1 0h1m5 0h1m-41 1h1m1 0h3m1 0h1m1 0h4m2 0h2m1 0h2m1 0h3m3 0h1m1 0h1m5 0h1m1 0h3m1 0h1m-41 1h1m1 0h3m1 0h1m1 0h2m2 0h1m2 0h1m3 0h1m1 0h1m1 0h4m2 0h1m4 0h1m1 0h3m1 0h1m-41 1h1m1 0h3m1 0h1m1 0h5m5 0h2m2 0h2m2 0h1m1 0h1m1 0h3m1 0h1m1 0h3m1 0h1m-41 1h1m5 0h1m1 0h1m2 0h3m1 0h1m1 0h1m4 0h1m2 0h1m1 0h3m2 0h1m1 0h1m5 0h1m-41 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-33 1h3m1 0h1m1 0h2m2 0h5m4 0h2m-29 1h1m1 0h5m3 0h3m1 0h2m1 0h1m1 0h2m1 0h1m1 0h2m3 0h1m4 0h5m-38 1h1m5 0h1m2 0h1m6 0h1m1 0h2m2 0h2m3 0h5m1 0h3m1 0h3m-40 1h1m2 0h3m1 0h4m1 0h2m1 0h2m4 0h1m2 0h1m1 0h3m2 0h1m1 0h3m-37 1h4m1 0h1m3 0h1m5 0h1m3 0h3m5 0h2m1 0h3m2 0h3m1 0h2m-41 1h1m1 0h1m2 0h5m1 0h4m1 0h2m1 0h2m1 0h6m1 0h1m1 0h2m4 0h2m-38 1h2m1 0h1m5 0h1m1 0h1m3 0h2m10 0h1m1 0h1m1 0h2m1 0h2m2 0h2m-41 1h2m1 0h1m2 0h4m1 0h2m1 0h4m2 0h1m1 0h3m1 0h2m4 0h2m1 0h4m-39 1h1m1 0h2m5 0h5m1 0h1m5 0h3m4 0h1m1 0h1m1 0h1m1 0h4m1 0h1m-39 1h8m4 0h2m2 0h1m4 0h5m2 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-40 1h2m1 0h2m1 0h3m1 0h1m1 0h4m1 0h1m1 0h1m2 0h1m5 0h4m1 0h4m1 0h2m-40 1h1m3 0h3m1 0h1m1 0h5m2 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m6 0h2m-33 1h1m1 0h2m1 0h1m2 0h3m3 0h2m2 0h1m3 0h2m3 0h2m2 0h2m-38 1h1m4 0h4m1 0h2m6 0h2m1 0h3m1 0h3m1 0h1m1 0h1m1 0h1m4 0h1m1 0h1m-39 1h1m5 0h6m2 0h1m2 0h2m2 0h1m1 0h1m2 0h7m1 0h5m-41 1h2m1 0h4m1 0h1m1 0h1m2 0h2m1 0h2m2 0h1m1 0h1m1 0h5m1 0h1m2 0h1m1 0h4m-39 1h1m4 0h1m1 0h2m1 0h1m1 0h1m2 0h2m1 0h1m1 0h2m2 0h1m2 0h2m2 0h1m2 0h4m1 0h1m-39 1h1m1 0h5m2 0h4m3 0h1m4 0h5m1 0h2m3 0h1m4 0h2m-39 1h1m1 0h2m7 0h3m3 0h4m1 0h1m4 0h1m2 0h1m1 0h5m1 0h1m-38 1h3m1 0h2m2 0h1m6 0h2m1 0h1m1 0h1m2 0h3m4 0h1m2 0h1m-35 1h1m2 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h4m3 0h1m2 0h4m2 0h2m-38 1h1m3 0h1m1 0h2m1 0h2m1 0h1m1 0h4m1 0h1m2 0h4m3 0h1m1 0h1m3 0h1m1 0h4m-41 1h3m5 0h9m1 0h1m1 0h3m1 0h2m4 0h2m1 0h8m-41 1h1m1 0h2m1 0h2m2 0h5m3 0h3m1 0h1m2 0h5m3 0h4m-36 1h1m1 0h2m3 0h4m1 0h5m1 0h5m1 0h1m1 0h1m1 0h1m2 0h5m1 0h1m-38 1h1m1 0h6m1 0h2m5 0h2m1 0h1m2 0h1m1 0h6m1 0h6m1 0h1m-31 1h1m1 0h1m1 0h3m2 0h3m1 0h1m1 0h1m1 0h2m1 0h2m2 0h1m3 0h1m2 0h2m-41 1h7m5 0h1m4 0h1m3 0h1m3 0h1m1 0h3m1 0h2m1 0h1m1 0h2m1 0h1m-40 1h1m5 0h1m1 0h4m2 0h2m1 0h2m1 0h4m2 0h1m3 0h3m3 0h2m1 0h2m-41 1h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h2m4 0h1m2 0h1m2 0h1m1 0h1m2 0h7m1 0h1m-41 1h1m1 0h3m1 0h1m1 0h1m1 0h5m2 0h7m6 0h4m1 0h1m1 0h4m-41 1h1m1 0h3m1 0h1m1 0h3m1 0h6m2 0h2m3 0h1m1 0h2m2 0h6m1 0h1m-39 1h1m5 0h1m2 0h1m1 0h2m1 0h1m1 0h3m2 0h2m3 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m-40 1h7m1 0h4m1 0h1m1 0h2m1 0h2m2 0h5m2 0h1m1 0h1m2 0h3m1 0h1"/></g></svg></div>
+                <div class="apk-qr-cap">Đang xem trên máy tính?<br>Quét mã bằng điện thoại Android để tải thẳng.</div>
+              </div>
+            </div>
             <button class="btn btn-primary" id="btnOpenRegisterFromHelp">🔑 Đăng ký / Cấp quyền sử dụng</button>
             <div class="banner banner-info" style="margin-top:16px;font-size:12px;">© Copyright: NamNV (namnv.vn@gmail.com; 0939713888)</div>
           </div>
@@ -1058,6 +1102,14 @@
     <span id="footerNote">GĐ1: Bản đồ thực địa · GĐ2: PAKH + duyệt thay đổi + phân quyền user (viewer/editor/admin) · Nền: OpenStreetMap / Vệ tinh Esri</span>
     <span id="clock"></span>
   </footer>
+</div>
+
+<!-- Dải nhắc cài app: chỉ hiện với Android + đang mở bằng trình duyệt (không hiện khi đã ở trong app).
+     Đặt ngoài cùng để nổi trên bản đồ ở mọi tab. -->
+<div id="apkNhac">
+  <div class="txt">Đang xem bằng trình duyệt nên <b>không đọc được sóng thật</b>. Cài app để có Cell ID, RSRP, SINR…</div>
+  <a id="apkNhacTai" href="https://github.com/namnvvn-cloud/bando-mbf-hungyen/releases/latest/download/MobiFone-Do-Song.apk" download>Cài ngay</a>
+  <button id="apkNhacDong" title="Để sau">✕</button>
 </div>
 
 <div class="modal-backdrop" id="weatherModal">
@@ -1642,27 +1694,33 @@ const ICON_DEFS = {
   '4G':          {shape:'paddle',  fill:'#e53935', label:'4', text:'#ffffff', scale:1.1},
   '5G':          {shape:'paddle',  fill:'#fb8c00', label:'5', text:'#ffffff', scale:1.1},
   '3G':          {shape:'paddle',  fill:'#43a047', label:'3', text:'#ffffff', scale:1.0},
-  'vnpt':        {shape:'blank',   fill:'#4fc3f7', scale:0.7},
-  'vtl':         {shape:'blank',   fill:'#f48fb1', scale:0.7},
+  // VNPT/VTL là hạ tầng nhà mạng khác, để nhỏ hơn hẳn cho trạm MBF nổi lên trước mắt.
+  // 1.1 × 2/3 = 0.7333 -> đúng bằng 2/3 icon MBF (yêu cầu 08/08/2026).
+  'vnpt':        {shape:'blank',   fill:'#4fc3f7', scale:0.7333},
+  'vtl':         {shape:'blank',   fill:'#f48fb1', scale:0.7333},
   'ptm-plan':    {shape:'pushpin', fill:'#43a047', scale:1.1},
   'ptm-reserve': {shape:'pushpin', fill:'#1e88e5', scale:1.1}
 };
 const GEN_LABEL_COLOR = {'5G':'#fb8c00', '4G':'#e53935', '3G':'#43a047', '2G':'#8a8f98'};
 
-function svgPaddle(fill, label, textColor){
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 32" width="26" height="32">
+/* ⚠ Lỗi đã sửa 08/08/2026: trước đây 3 hàm dưới đây gắn cứng width="26" height="32" nên
+   dù ICON_DEFS.scale để 0.7 thì SVG vẫn VẼ RA đúng 26×32 — scale chỉ làm nhỏ cái hộp
+   iconSize, còn hình thì tràn ra ngoài. Kết quả: icon VNPT/VTL trông to y hệt icon MBF.
+   Nay truyền w/h thật vào thuộc tính width/height, viewBox giữ nguyên để hình co đúng tỷ lệ. */
+function svgPaddle(fill, label, textColor, w, h){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 32" width="${w}" height="${h}">
     <path d="M13 31 C13 31 3 20.5 3 12 C3 6 7.5 1 13 1 C18.5 1 23 6 23 12 C23 20.5 13 31 13 31 Z" fill="${fill}" stroke="#00000055" stroke-width="1"/>
     <circle cx="13" cy="12" r="8.4" fill="#ffffff" opacity=".92"/>
     <text x="13" y="16.3" font-family="Arial,sans-serif" font-size="11.5" font-weight="700" text-anchor="middle" fill="${fill}">${label}</text>
   </svg>`;
 }
-function svgBlank(fill){
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 32" width="26" height="32">
+function svgBlank(fill, w, h){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 32" width="${w}" height="${h}">
     <path d="M13 31 C13 31 3 20.5 3 12 C3 6 7.5 1 13 1 C18.5 1 23 6 23 12 C23 20.5 13 31 13 31 Z" fill="${fill}" stroke="#00000040" stroke-width="1"/>
   </svg>`;
 }
-function svgPushpin(fill){
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 34" width="26" height="34">
+function svgPushpin(fill, w, h){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 34" width="${w}" height="${h}">
     <path d="M13 33 C13 33 3 21 3 12.5 C3 5.6 7.5 1 13 1 C18.5 1 23 5.6 23 12.5 C23 21 13 33 13 33 Z" fill="${fill}" stroke="#00000055" stroke-width="1"/>
     <circle cx="13" cy="12" r="4.4" fill="#ffffff" opacity=".95"/>
   </svg>`;
@@ -1671,12 +1729,12 @@ const siteIconCache = {};
 function iconForKey(ic){
   if(siteIconCache[ic]) return siteIconCache[ic];
   const def = ICON_DEFS[ic];
-  let svg;
-  if(def.shape === 'paddle') svg = svgPaddle(def.fill, def.label, def.text);
-  else if(def.shape === 'blank') svg = svgBlank(def.fill);
-  else svg = svgPushpin(def.fill);
-  const baseW = def.shape === 'pushpin' ? 26 : 26, baseH = def.shape === 'pushpin' ? 34 : 32;
+  const baseW = 26, baseH = def.shape === 'pushpin' ? 34 : 32;
   const w = Math.round(baseW * def.scale), h = Math.round(baseH * def.scale);
+  let svg;
+  if(def.shape === 'paddle') svg = svgPaddle(def.fill, def.label, def.text, w, h);
+  else if(def.shape === 'blank') svg = svgBlank(def.fill, w, h);
+  else svg = svgPushpin(def.fill, w, h);
   const icon = L.divIcon({className:'', html:svg, iconSize:[w,h], iconAnchor:[Math.round(w/2), h], popupAnchor:[0, -h+2]});
   siteIconCache[ic] = icon;
   return icon;
@@ -3251,6 +3309,64 @@ document.getElementById('btnMeasureClearAll').addEventListener('click', () => {
        loại kết nối, tốc độ/độ trễ đo thực tế, trạm gần nhất) + hướng dẫn nhập tay.
    ============================================================================ */
 
+/* ============================================================================
+   CÀI APP ANDROID TỪ CHÍNH TRANG WEB (GĐ8 08/08/2026)
+
+   Android KHÔNG cho phép trang web tự cài app — không có API nào làm được, kể cả
+   khi người dùng đồng ý. Mức tối giản mà hệ điều hành cho phép là: tải file APK →
+   bấm vào file → cho phép nguồn cài đặt (1 lần đầu) → Cài. Vì vậy phần dưới đây
+   tối ưu vào 3 việc: (1) tự nhận diện máy để chỉ mời cài đúng người dùng Android,
+   (2) 1 nút tải thẳng, không qua trang trung gian, (3) mã QR cho người đang ngồi máy tính.
+
+   APK do GitHub Actions tự build từ mã nguồn trong repo, đẩy vào Release cố định
+   "apk-latest" nên link tải không bao giờ đổi, không phải sửa web mỗi lần ra bản mới.
+   ============================================================================ */
+const APK_URL = 'https://github.com/namnvvn-cloud/bando-mbf-hungyen/releases/latest/download/MobiFone-Do-Song.apk';
+function apkLoaiMay(){
+  const ua = navigator.userAgent || '';
+  if(/Android/i.test(ua)) return 'android';
+  if(/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  return 'may-tinh';
+}
+function apkKhoiTao(){
+  const may = apkLoaiMay();
+  const trongApp = typeof mbfNative !== 'undefined' && mbfNative.available();
+  const box = document.getElementById('apkMay');
+  const nut = document.getElementById('apkTai');
+  const buoc = document.getElementById('apkSteps');
+  if(box && nut){
+    if(trongApp){
+      box.className = 'apk-may ok';
+      box.textContent = '✅ Đang chạy TRONG app "MobiFone Đo Sóng" — số liệu sóng đọc được đầy đủ, không cần cài lại.';
+      nut.classList.add('mo'); nut.textContent = '✔ Đã cài';
+      if(buoc) buoc.style.display = 'none';
+    } else if(may === 'android'){
+      box.className = 'apk-may ok';
+      box.textContent = '✅ Máy Android — cài được. Bấm nút bên dưới là tải luôn.';
+    } else if(may === 'ios'){
+      box.className = 'apk-may khong';
+      box.innerHTML = '⚠ Đang dùng iPhone/iPad — <b>không cài được</b>. Apple chặn app đọc thông số vô tuyến từ iOS 8.3, đây là chính sách của Apple chứ không phải app thiếu. Dùng Field Test Mode (quay số <code>*3001#12345#*</code>) rồi nhập tay ở mục "📶 Đo sóng".';
+      nut.classList.add('mo'); nut.textContent = '⛔ Không hỗ trợ iPhone';
+      if(buoc) buoc.style.display = 'none';
+    } else {
+      box.className = 'apk-may';
+      box.textContent = 'Đang mở trên máy tính. Quét mã QR bên phải bằng điện thoại Android để tải thẳng, hoặc bấm nút để tải file APK rồi chép sang máy.';
+    }
+  }
+  // Dải nhắc: chỉ với Android, đang ở trình duyệt, và chưa từng tắt đi
+  const nhac = document.getElementById('apkNhac');
+  if(!nhac) return;
+  let daTat = false;
+  try{ daTat = localStorage.getItem('mbf_apk_da_tat') === '1'; }catch(e){}
+  if(may === 'android' && !trongApp && !daTat){
+    setTimeout(() => nhac.classList.add('hien'), 4000);   // để người dùng xem bản đồ trước, đừng chặn ngay
+  }
+  document.getElementById('apkNhacDong').onclick = () => {
+    nhac.classList.remove('hien');
+    try{ localStorage.setItem('mbf_apk_da_tat','1'); }catch(e){}
+  };
+}
+
 /** Phát hiện cầu nối native do app Android tiêm vào. Hỗ trợ cả 2 kiểu:
  *  - addJavascriptInterface  -> window.MBFSignal.read() trả chuỗi JSON (đồng bộ)
  *  - WebViewCompat.addWebMessageListener -> window.MBFSignalBridge.postMessage() (bất đồng bộ) */
@@ -4113,6 +4229,7 @@ function updateStats(){
 updateStats();
 function tickClock(){ document.getElementById('clock').textContent = new Date().toLocaleString('vi-VN'); }
 tickClock(); setInterval(tickClock, 1000);
+try{ apkKhoiTao(); }catch(e){ console.warn('Không dựng được khối cài app:', e); }
 
 /* ============================================================================
    PAKH MODULE (Giai đoạn 2)
@@ -6105,16 +6222,30 @@ function nodeMoiFolder(){
   }
   return _nodeMoiFolder;
 }
+/* Chỉ mục (nhóm|tên gốc) -> entry, dựng 1 lần rồi tra O(1).
+   ⚠ Bắt buộc phải có: thực tế ngày 08/08/2026 backend trả về 1.451 dòng đã duyệt. Nếu mỗi dòng
+   lại quét hết 4.389 trạm như bản đầu thì thành ~6,4 triệu vòng lặp kèm regex ngay lúc mở web —
+   đúng thứ SOP mục 10 cấm. Dựng chỉ mục 1 lần chỉ tốn 4.389 vòng. */
+let _impChiMuc = null;
+function impChiMuc(){
+  if(_impChiMuc) return _impChiMuc;
+  _impChiMuc = new Map();
+  for(const [, v] of siteLeaf){
+    const goc = impTenGoc(v.node.n);
+    const nhom = impNhomCua(v.node);
+    if(nhom && !_impChiMuc.has(nhom + '|' + goc)) _impChiMuc.set(nhom + '|' + goc, v);
+    if(!_impChiMuc.has('*|' + goc)) _impChiMuc.set('*|' + goc, v);   // tra khi không biết nhóm
+  }
+  return _impChiMuc;
+}
 /** Chèn 1 trạm đã được duyệt vào cây. KHÔNG đụng DOM — vẽ lại cây một lần ở cuối cho gọn. */
 function themTramMoiVaoCay(ten, lat, lon, nhom){
   if(!ten || !isValidLatLon(lat, lon)) return false;
   const goc = impTenGoc(ten);
   nhom = String(nhom || '').trim();
   // "Đã có rồi" phải xét theo cặp (nhóm, tên gốc): cùng tên nhưng khác lớp công nghệ là trạm khác
-  for(const [, v] of siteLeaf){
-    if(impTenGoc(v.node.n) !== goc) continue;
-    if(!nhom || impNhomCua(v.node) === nhom) return false;
-  }
+  const cm = impChiMuc();
+  if(cm.has((nhom || '*') + '|' + goc)) return false;
   const gen = IMPORT_GROUP_GEN[nhom] || '';
   const folder = impTimFolder(nhom) || nodeMoiFolder();
   // Trên bản đồ trạm 5G/3G mang hậu tố thế hệ trong tên, giữ đúng quy ước đó cho trạm mới
@@ -6123,24 +6254,25 @@ function themTramMoiVaoCay(ten, lat, lon, nhom){
   const node = {t:'pt', n:tenHien, c:[lon, lat], g:theHe, ic:theHe,
                 id:'new_' + (nhom || 'x') + '_' + goc, __parent:folder, __nhom:nhom, __moi:true};
   folder.ch.push(node);
-  siteLeaf.set(node.id, lazyEntry(node, 'marker', makeSiteMarker));
+  const entry = lazyEntry(node, 'marker', makeSiteMarker);
+  siteLeaf.set(node.id, entry);
+  impChiMuc().set((nhom || '*') + '|' + goc, entry);   // giữ chỉ mục đúng cho các dòng sau
   checkedLeaves.add(node.id);                       // hiện sẵn để thấy ngay trạm mới
   return true;
 }
-/** Áp dụng phần "sửa toạ độ" của lô import đã duyệt lên trạm đang có. */
+/** Áp dụng phần "sửa toạ độ" của lô import đã duyệt lên trạm đang có.
+    Trả false khi toạ độ đã trùng — phần lớn lô cũ rơi vào trường hợp này nên phải thoát sớm. */
 function suaToaDoTramTheoImport(ten, lat, lon, nhom){
   if(!ten || !isValidLatLon(lat, lon)) return false;
   const goc = impTenGoc(ten);
   nhom = String(nhom || '').trim();
-  for(const [, v] of siteLeaf){
-    if(impTenGoc(v.node.n) !== goc) continue;
-    if(nhom && impNhomCua(v.node) !== nhom) continue;
-    if(v.node.c && Math.abs(v.node.c[0]-lon) < 1e-7 && Math.abs(v.node.c[1]-lat) < 1e-7) return false;
-    v.node.c = [lon, lat];
-    if(v._obj) v._obj.setLatLng([lat, lon]);        // marker đã dựng thì dời tại chỗ, khỏi dựng lại
-    return true;
-  }
-  return false;
+  const cm = impChiMuc();
+  const v = cm.get(nhom + '|' + goc) || cm.get('*|' + goc);
+  if(!v) return false;
+  if(v.node.c && Math.abs(v.node.c[0]-lon) < 1e-7 && Math.abs(v.node.c[1]-lat) < 1e-7) return false;
+  v.node.c = [lon, lat];
+  if(v._obj) v._obj.setLatLng([lat, lon]);          // marker đã dựng thì dời tại chỗ, khỏi dựng lại
+  return true;
 }
 /** Tính lại số đếm mọi thư mục rồi vẽ lại cây trạm. Cây vẽ lười nên chỉ tốn vài dòng cấp 1. */
 function veLaiCayTram(){
@@ -6156,15 +6288,33 @@ function veLaiCayTram(){
     '(' + SITE_TOP.reduce((s, n) => s + (n.t === 'folder' ? (n.cnt || 0) : 1), 0) + ')';
   _fltDanhMuc = null;                                // danh mục lọc phải tính lại vì cây đã đổi
 }
+/* Khung toạ độ hợp lý của địa bàn (Hưng Yên + Thái Bình sau sáp nhập), nới rộng cho chắc.
+   ⚠ Vì sao cần: ngày 08/08/2026 backend trả về 1 lô đã duyệt trong đó 1.438 dòng VTL bị
+   ĐẢO NGƯỢC Lat/Long (lat=106.05, lon=20.65). Nếu cứ áp thì toàn bộ trạm Viettel văng khỏi
+   bản đồ. Chặn ở đây và ĐẾM lại để báo cho Admin biết mà đi sửa dữ liệu gốc, thay vì im lặng. */
+const VUNG_HOP_LE = {latMin:19.5, latMax:21.6, lonMin:105.3, lonMax:107.2};
+function toaDoHopLyChoDiaBan(lat, lon){
+  return isValidLatLon(lat, lon) &&
+         lat >= VUNG_HOP_LE.latMin && lat <= VUNG_HOP_LE.latMax &&
+         lon >= VUNG_HOP_LE.lonMin && lon <= VUNG_HOP_LE.lonMax;
+}
+let _cshtBoQua = null;      // {so, daoNguoc, vidu[]} — Admin xem được ở tab Duyệt & Quản trị
 function applyApprovedCshtAdds(){
   if(!CONFIG.API_URL) return Promise.resolve(0);
   return fetch(CONFIG.API_URL + '?action=list_approved_csht').then(r => r.json()).then(d => {
     const items = (d && d.ok && d.items) || [];
-    let them = 0, sua = 0;
-    const nodeMoi = [];
+    let them = 0, sua = 0, boQua = 0, daoNguoc = 0;
+    const vidu = [], nodeMoi = [];
     items.forEach(it => {
       const ten = String(it.ten || '').trim();
       const lat = parseFloat(it.lat), lon = parseFloat(it.lon);
+      if(!toaDoHopLyChoDiaBan(lat, lon)){
+        boQua++;
+        // đảo lại thử: nếu hợp lệ thì đúng là lỗi ghi nhầm cột, nói thẳng ra cho dễ sửa
+        if(toaDoHopLyChoDiaBan(lon, lat)) daoNguoc++;
+        if(vidu.length < 5) vidu.push(`${ten} (${lat}, ${lon})`);
+        return;
+      }
       if(String(it.loai || 'them') === 'sua'){
         if(suaToaDoTramTheoImport(ten, lat, lon, it.nhom)) sua++;
       } else if(themTramMoiVaoCay(ten, lat, lon, it.nhom)){
@@ -6178,8 +6328,25 @@ function applyApprovedCshtAdds(){
     }
     if(sua) updateStats();
     if(them || sua) console.info(`[Bản đồ] Tự cập nhật từ lô import đã duyệt: thêm ${them} trạm, sửa toạ độ ${sua} trạm.`);
+    if(boQua){
+      _cshtBoQua = {so: boQua, daoNguoc: daoNguoc, vidu: vidu};
+      console.warn(`[Bản đồ] Bỏ qua ${boQua} dòng trong lô đã duyệt vì toạ độ nằm ngoài địa bàn`
+        + (daoNguoc ? ` — trong đó ${daoNguoc} dòng nhiều khả năng bị ĐẢO Lat/Long.` : '.'), vidu);
+      hienCanhBaoCshtBoQua();
+    }
     return them + sua;
   }).catch(() => 0);
+}
+/** Dán cảnh báo lên đầu mục Import CSHT để Admin nhìn thấy, không chỉ nằm trong console. */
+function hienCanhBaoCshtBoQua(){
+  if(!_cshtBoQua) return;
+  const banner = document.getElementById('importCshtBanner');
+  if(!banner) return;
+  banner.innerHTML = `<div class="banner banner-warn">⚠ Có <b>${_cshtBoQua.so}</b> dòng trong lô import đã duyệt `
+    + `bị bỏ qua vì toạ độ nằm ngoài địa bàn`
+    + (_cshtBoQua.daoNguoc ? ` — <b>${_cshtBoQua.daoNguoc}</b> dòng nhiều khả năng bị <b>đảo Lat/Long</b>` : '')
+    + `. Ví dụ: ${escapeHtmlLite(_cshtBoQua.vidu.join(' · '))}.<br>`
+    + `Cần sửa lại file nguồn rồi import lại, hoặc từ chối lô cũ. Bản đồ đang giữ nguyên toạ độ cũ cho các trạm này.</div>`;
 }
 applyApprovedCshtAdds();
 

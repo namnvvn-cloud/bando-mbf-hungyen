@@ -170,6 +170,34 @@
   .sig-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px;margin-top:12px;
     display:flex;gap:8px;flex-wrap:wrap;box-shadow:0 -8px 12px -8px rgba(0,0,0,.18);}
 
+  /* ---- Khung Đo sóng gọn lại (08/08/2026): số liệu chính đưa lên lưới ô vuông đọc lướt được
+     trong 1 giây, các tham số ít dùng gấp vào mục "Xem thêm" để khung không dài lê thê ---- */
+  .sig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 0;}
+  .sig-cell{background:var(--mf-bg);border:1px solid var(--mf-border);border-radius:8px;padding:7px 6px;text-align:center;}
+  .sig-cell .k{font-size:10px;color:var(--mf-muted);text-transform:uppercase;letter-spacing:.03em;line-height:1.3;}
+  .sig-cell .v{font-size:14px;font-weight:700;color:var(--mf-blue-dark);margin-top:2px;
+    line-height:1.25;word-break:break-word;}
+  .sig-cell.mo .v{color:var(--mf-muted);font-weight:600;}
+  .sig-line{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;
+    border-bottom:1px solid var(--mf-border);}
+  .sig-line:last-child{border-bottom:none;}
+  .sig-line span:first-child{color:var(--mf-muted);flex:0 0 auto;}
+  .sig-line span:last-child{font-weight:600;text-align:right;word-break:break-word;}
+  .sig-more{margin-top:10px;border:1px solid var(--mf-border);border-radius:8px;padding:0 10px;}
+  .sig-more > summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--mf-blue-dark);
+    padding:8px 0;list-style:none;}
+  .sig-more > summary::-webkit-details-marker{display:none;}
+  .sig-more > summary::before{content:'▸ ';}
+  .sig-more[open] > summary::before{content:'▾ ';}
+  .sig-more > div{padding-bottom:8px;}
+  .sig-off{border:1px dashed var(--mf-border);border-radius:10px;padding:14px;text-align:center;
+    background:var(--mf-bg);margin-bottom:10px;}
+  .sig-off .ic{font-size:26px;line-height:1;}
+  .sig-off .tt{font-weight:700;font-size:14px;color:var(--mf-blue-dark);margin:6px 0 3px;}
+  .sig-off .ss{font-size:12.5px;color:var(--mf-muted);line-height:1.6;}
+  .sig-off .btn{margin-top:10px;text-decoration:none;display:inline-block;}
+  .sig-fresh{font-size:11px;color:var(--mf-muted);text-align:center;margin-top:8px;}
+
   /* Chú giải thang màu RSRP cho lớp "Điểm đo sóng đã nhập" */
   .drive-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;
     border:1px solid rgba(0,0,0,.25);}
@@ -558,11 +586,15 @@
         <button class="tool-btn measure-tools-toggle" id="btnMeasureToolsToggle">🛠 Công cụ</button>
         <div class="measure-btns" id="measureBtns" style="display:none;">
           <!-- "Sóng hiện tại" chuyển vào đây (trước là nút rời trong .map-tools) theo yêu cầu 06/08/2026 — gộp chung 1 chỗ với các công cụ đo đạc khác. Vẫn giữ style .tool-btn-signal (nền xanh) để nổi bật vì đây là công cụ chính khi đi hiện trường (xem SOP 3.8). -->
-          <button class="tool-btn tool-btn-signal" id="btnLiveSignal" title="Xem chất lượng sóng điện thoại đang bắt tại chỗ (Cell ID, tần số, công nghệ, mức thu, chất lượng)">📶 Sóng hiện tại</button>
+          <!-- GỘP 08/08/2026: trước đây có 2 mục đo sóng ("Sóng hiện tại" đọc tự động và "Đo sóng"
+               nhập tay) khiến người dùng phải đoán bấm cái nào. Nay còn ĐÚNG 1 mục: bấm vào là đọc
+               ngay số liệu thật nếu đã cài app, còn nhập tay thì vào bằng nút ngay trong khung đó. -->
+          <button class="tool-btn tool-btn-signal" id="btnLiveSignal" title="Đo sóng tại chỗ: Cell ID, băng tần, mức thu, chất lượng (đầy đủ khi đã cài app MobiFone Đo Sóng)">📶 Đo sóng</button>
           <button class="tool-btn" id="btnMeasureDist" title="Bấm các điểm trên bản đồ để đo khoảng cách đường chim bay">📏 Đo khoảng cách</button>
           <button class="tool-btn" id="btnMeasureRoute" title="Bấm điểm đầu và điểm cuối — tự động tính đường đi và quãng đường thực tế">🛣 Đo route</button>
           <button class="tool-btn" id="btnMeasureArea" title="Bấm các điểm để vẽ hình bao khu vực rồi tính diện tích">📐 Tính diện tích</button>
-          <button class="tool-btn" id="btnMeasureSignal" title="Nhập tay số liệu đo sóng (Cell ID, băng tần, RSRP, chất lượng) đọc được từ điện thoại">📶 Đo sóng</button>
+          <!-- Nút "Đo sóng (nhập tay)" cũ đã GỠ ở đây, chức năng vẫn còn nguyên: mở từ nút
+               "✍ Nhập tay / ghim điểm đo" trong khung Đo sóng. Hàm setMeasureMode('signal') giữ nguyên. -->
           <button class="tool-btn" id="btnImportDrive" title="Nhập file log đo sóng xuất từ app G-NetTrack / Network Cell Info (TXT, CSV, KML) rồi vẽ lên bản đồ">📂 Nhập file đo sóng</button>
           <button class="tool-btn" id="btnSpeedtest" title="Đo tốc độ mạng đang dùng, ngay trên bản đồ">🚀 Speedtest</button>
           <button class="tool-btn" id="btnMeasureClearAll" title="Xoá toàn bộ kết quả đo đã chốt trên bản đồ">🗑 Xoá kết quả đo</button>
@@ -1228,13 +1260,15 @@
 <!-- Sóng hiện tại: đọc thông số vô tuyến máy đang bắt (đầy đủ khi chạy trong app MobiFone Đo Sóng) -->
 <div class="modal-backdrop" id="liveSigModal">
   <div class="modal-box" style="max-width:520px;">
-    <div class="modal-head"><h4>📶 Sóng hiện tại</h4><button id="closeLiveSig">✕</button></div>
+    <div class="modal-head"><h4>📶 Đo sóng</h4><button id="closeLiveSig">✕</button></div>
     <div class="modal-body">
       <div id="liveSigBody"></div>
       <!-- Ghim đáy: trên màn hình điện thoại bảng thông số khá dài, nút thao tác phải luôn với tới được
            mà không phải cuộn xuống cuối. -->
       <div class="sig-actions">
-        <button class="btn btn-primary" id="btnLiveSigPin" style="flex:1;min-width:150px;">📍 Ghim điểm đo lên bản đồ</button>
+        <!-- Đây cũng là lối vào duy nhất của chế độ NHẬP TAY sau khi gộp 2 mục đo sóng (08/08/2026),
+             nên nhãn phải nói rõ cả 2 việc, không chỉ "ghim". -->
+        <button class="btn btn-primary" id="btnLiveSigPin" style="flex:1;min-width:170px;">✍ Ghim điểm đo / nhập tay</button>
         <button class="btn btn-outline" id="btnLiveSigRefresh">🔄 Đo lại</button>
       </div>
     </div>
@@ -1429,7 +1463,7 @@ function applyAuthUI(){
      thường, chỉ Admin thấy để tiếp tục thử nghiệm/góp ý. Dùng display:'' (không phải 'flex') để nhường lại cho
      CSS .tool-btn quyết định — ẩn bằng display:none thì các nút còn lại trong .measure-btns (flex column,
      border-bottom phân cách) tự dồn liền kề nhau, không cần sắp xếp lại DOM. */
-  const ADMIN_ONLY_TOOL_IDS = ['btnLiveSignal', 'btnMeasureSignal', 'btnImportDrive'];
+  const ADMIN_ONLY_TOOL_IDS = ['btnLiveSignal', 'btnImportDrive'];
   ADMIN_ONLY_TOOL_IDS.forEach(id => {
     const el = document.getElementById(id);
     if(el) el.style.display = (a.role === 'admin') ? '' : 'none';
@@ -3090,7 +3124,9 @@ function clearMeasureDraft(){
   measureVertexMarkers.forEach(m => map.removeLayer(m));
   measureVertexMarkers = [];
 }
-const MEASURE_BTN_ID = {distance:'btnMeasureDist', route:'btnMeasureRoute', area:'btnMeasureArea', signal:'btnMeasureSignal'};
+/* Chế độ 'signal' không còn nút riêng trên thanh Công cụ (gộp vào khung Đo sóng, 08/08/2026)
+   -> để null, hàm tô sáng nút phải bỏ qua thay vì gọi getElementById trên id không tồn tại. */
+const MEASURE_BTN_ID = {distance:'btnMeasureDist', route:'btnMeasureRoute', area:'btnMeasureArea', signal:null};
 const MEASURE_TITLE = {distance:'📏 Đo khoảng cách', route:'🛣 Đo route (tự động theo đường thật)', area:'📐 Tính diện tích', signal:'📶 Đo sóng (nhập tay)'};
 const MEASURE_HINT = {
   distance: 'Bấm các điểm trên bản đồ để đo khoảng cách đường chim bay (nối thẳng các điểm). Bấm "Xong" để chốt kết quả lên bản đồ.',
@@ -3265,7 +3301,6 @@ function saveSignalPoint(latlng){
 document.getElementById('btnMeasureDist').addEventListener('click', () => setMeasureMode('distance'));
 document.getElementById('btnMeasureRoute').addEventListener('click', () => setMeasureMode('route'));
 document.getElementById('btnMeasureArea').addEventListener('click', () => setMeasureMode('area'));
-document.getElementById('btnMeasureSignal').addEventListener('click', () => setMeasureMode('signal'));
 document.getElementById('btnMeasureCancel').addEventListener('click', () => stopMeasureMode());
 document.getElementById('btnMeasureDone').addEventListener('click', () => {
   if(measureMode === 'distance' && measureLine && measurePts.length >= 2){
@@ -3499,15 +3534,28 @@ function posBlockHtml(pos){
   return html + '</table>';
 }
 
-/** Chế độ ĐẦY ĐỦ: đang chạy trong app MobiFone Đo Sóng */
+/** Chế độ ĐẦY ĐỦ: đang chạy trong app MobiFone Đo Sóng.
+    Bố cục gọn (08/08/2026): 1 khối lớn cho mức thu -> lưới 6 ô cho số liệu hay dùng nhất
+    -> vị trí + trạm gần nhất -> "Xem thêm" gấp lại cho tham số ít dùng và ô lân cận.
+    Mục tiêu: cán bộ đứng ngoài trạm liếc 1 giây là biết sóng tốt hay xấu và đang bám ô nào. */
 function renderLiveSignalNative(d, pos){
   const rsrp = (d.rsrp != null) ? Number(d.rsrp) : null;
   const color = driveColor(rsrp), rate = driveRating(rsrp);
-  const row = (lbl, val, unit) => (val === null || val === undefined || val === '') ? '' :
-    `<tr><td>${lbl}</td><td>${val}${unit||''}</td></tr>`;
-  const nb = (d.lanCan || []).slice(0, 6).map(c =>
+  const co = v => (v !== null && v !== undefined && v !== '');
+  const o = (nhan, giaTri, donVi) => co(giaTri)
+    ? `<div class="sig-cell"><div class="k">${nhan}</div><div class="v">${giaTri}${donVi || ''}</div></div>`
+    : `<div class="sig-cell mo"><div class="k">${nhan}</div><div class="v">—</div></div>`;
+  const dong = (nhan, giaTri) => co(giaTri) ? `<div class="sig-line"><span>${nhan}</span><span>${giaTri}</span></div>` : '';
+  // 5G NSA: ô phục vụ vẫn là ô neo LTE nên tần số là EARFCN; chỉ 5G SA mới là NR-ARFCN
+  // Giữ nguyên chú thích EARFCN/NR-ARFCN dù ô nhỏ: thiếu nó là hiểu nhầm tần số ô neo thành tần số 5G.
+  const laNrSa = (d.congNghe || '').indexOf('5G') === 0 && d.nrRsrp == null;
+  const tanSo = co(d.tanSo) ? (d.tanSo + (laNrSa ? ' (NR-ARFCN)' : ' (EARFCN)')) : null;
+  const near = pos ? findNearestSite(pos.lat, pos.lon) : null;
+  const lanCan = d.lanCan || [];
+  const nb = lanCan.slice(0, 6).map(c =>
     `<div class="sig-nb"><span>PCI ${c.pci ?? '—'}${c.tanSo ? ' · ' + c.tanSo : ''}</span>
       <b style="color:${driveColor(c.rsrp)}">${c.rsrp ?? '—'} dBm${c.rsrq != null ? ' / ' + c.rsrq + ' dB' : ''}</b></div>`).join('');
+
   return `
     <div class="sig-hero" style="background:${color};">
       <div class="sig-tech">${d.congNghe || 'Không rõ công nghệ'}${d.nhaMang ? ' · ' + d.nhaMang : ''}</div>
@@ -3515,64 +3563,102 @@ function renderLiveSignalNative(d, pos){
       <div class="sig-rate">${rate}</div>
       <div class="sig-bar"><span style="width:${rsrpPercent(rsrp)}%"></span></div>
     </div>
-    <div class="sig-sec">Thông số ô đang phục vụ</div>
-    <table class="sig-table">
-      ${row('Chất lượng RSRQ', d.rsrq, ' dB')}
-      ${row('SINR', d.sinr, ' dB')}
-      ${row('Cell ID', d.cellId)}
-      ${row('PCI', d.pci)}
-      ${row('TAC', d.tac)}
-      ${/* Ở chế độ 5G NSA, ô đang phục vụ vẫn là ô neo LTE nên tần số là EARFCN, không phải NR-ARFCN.
-            Chỉ khi 5G SA (không có lớp NR kèm theo) thì mới là NR-ARFCN. */''}
-      ${row('Tần số', d.tanSo ? (d.tanSo + ((d.congNghe||'').indexOf('5G') === 0 && d.nrRsrp == null ? ' (NR-ARFCN)' : ' (EARFCN)')) : null)}
-      ${row('Band', d.band)}
-      ${row('Băng thông', d.bangThongKhz ? (d.bangThongKhz/1000) : null, ' MHz')}
-      ${row('Timing Advance', d.timingAdvance)}
-      ${row('MCC / MNC', (d.mcc && d.mnc) ? (d.mcc + ' / ' + d.mnc) : null)}
-    </table>
-    ${d.nrRsrp != null ? `<div class="sig-sec">Lớp 5G NR (chế độ NSA)</div>
-      <table class="sig-table">
-        ${row('SS-RSRP', d.nrRsrp, ' dBm')}
-        ${row('SS-RSRQ', d.nrRsrq, ' dB')}
-        ${row('SS-SINR', d.nrSinr, ' dB')}
-      </table>
-      <div class="small-note">Máy đang gắn 5G NSA: định danh ô ở trên là của ô neo 4G, còn cường độ 5G nằm ở bảng này.</div>` : ''}
-    ${nb ? `<div class="sig-sec">Ô lân cận (${(d.lanCan||[]).length})</div>${nb}` : ''}
-    ${posBlockHtml(pos)}
+
+    <div class="sig-grid">
+      ${o('Cell ID', d.cellId)}
+      ${o('PCI', d.pci)}
+      ${o('Band', d.band)}
+      ${o('Tần số', tanSo)}
+      ${o('RSRQ', d.rsrq, ' dB')}
+      ${o('SINR', d.sinr, ' dB')}
+    </div>
+
+    ${d.nrRsrp != null ? `<div class="sig-sec">Lớp 5G NR (NSA)</div>
+      <div class="sig-grid">
+        ${o('SS-RSRP', d.nrRsrp, ' dBm')}
+        ${o('SS-RSRQ', d.nrRsrq, ' dB')}
+        ${o('SS-SINR', d.nrSinr, ' dB')}
+      </div>
+      <div class="small-note">Máy đang gắn 5G NSA: Cell ID/PCI ở trên là của ô neo 4G, cường độ 5G nằm ở đây.</div>` : ''}
+
+    <div class="sig-sec">Vị trí</div>
+    ${pos ? `
+      ${dong('Toạ độ', pos.lat.toFixed(6) + ', ' + pos.lon.toFixed(6))}
+      ${dong('Sai số GPS', '±' + Math.round(pos.acc) + ' m')}
+      ${near ? dong('Trạm gần nhất', near.node.n + (near.node.g ? ' (' + near.node.g + ')' : '')) : ''}
+      ${near ? dong('Cách', (near.dist < 1000 ? Math.round(near.dist) + ' m' : (near.dist/1000).toFixed(2) + ' km')
+                    + ' · hướng ' + near.bearing.text) : ''}`
+      : `<div class="banner banner-warn" style="margin:0;">📍 Chưa lấy được vị trí GPS — bật Định vị rồi bấm "Đo lại".</div>`}
+
+    <details class="sig-more">
+      <summary>Xem thêm tham số${lanCan.length ? ' · ' + lanCan.length + ' ô lân cận' : ''}</summary>
+      <div>
+        ${dong('TAC', d.tac)}
+        ${dong('Băng thông', co(d.bangThongKhz) ? (d.bangThongKhz/1000) + ' MHz' : null)}
+        ${dong('Timing Advance', d.timingAdvance)}
+        ${dong('MCC / MNC', (d.mcc && d.mnc) ? (d.mcc + ' / ' + d.mnc) : null)}
+        ${nb ? `<div class="sig-sec" style="margin-top:10px;">Ô lân cận</div>${nb}` : ''}
+      </div>
+    </details>
+
     ${d.canhBao ? `<div class="banner banner-warn" style="margin-top:10px;">⚠ ${d.canhBao}</div>` : ''}
-    <div class="small-note" style="margin-top:8px;">Số liệu đọc trực tiếp từ modem máy, tự làm mới mỗi 3 giây (modem Android giới hạn ~2 giây/lần).</div>`;
+    <div class="sig-fresh">Đọc trực tiếp từ modem máy · tự làm mới mỗi 3 giây</div>`;
 }
 
-/** Chế độ TRÌNH DUYỆT THƯỜNG: nói thật cái gì không lấy được, và đưa ra cái lấy được thật. */
+/** Chế độ TRÌNH DUYỆT THƯỜNG: nói ngắn gọn cái gì không lấy được và làm gì tiếp,
+    thay vì đổ ra một bảng dài mà số nào cũng "—". Chi tiết kỹ thuật gấp vào "Xem thêm". */
 function renderLiveSignalBrowser(d, pos){
   const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   const isCellular = c && c.type === 'cellular';
-  const online = navigator.onLine;
+  const may = (typeof apkLoaiMay === 'function') ? apkLoaiMay() : 'may-tinh';
+  const near = pos ? findNearestSite(pos.lat, pos.lon) : null;
+  const dong = (nhan, giaTri) => (giaTri === null || giaTri === undefined || giaTri === '')
+    ? '' : `<div class="sig-line"><span>${nhan}</span><span>${giaTri}</span></div>`;
   const warn = (d && d.canhBao) ? `<div class="banner banner-warn" style="margin:0 0 10px;">⚠ ${d.canhBao}</div>` : '';
+
+  // Lời khuyên đổi theo loại máy — đừng mời cài app cho người dùng iPhone
+  let cta;
+  if(may === 'ios'){
+    cta = `<div class="ss">iPhone không đọc được thông số vô tuyến, kể cả bằng app riêng (Apple chặn từ iOS 8.3).<br>
+             Quay số <code>*3001#12345#*</code> để mở Field Test rồi nhập tay.</div>`;
+  } else if(may === 'android'){
+    cta = `<div class="ss">Cài app <b>MobiFone Đo Sóng</b> là có ngay Cell ID, PCI, băng tần, RSRP, RSRQ, SINR và ô lân cận.</div>
+           <a class="btn btn-primary" href="${typeof APK_URL !== 'undefined' ? APK_URL : '#'}" download>⬇ Cài app (2,4 MB)</a>`;
+  } else {
+    cta = `<div class="ss">Số liệu vô tuyến chỉ đọc được trên điện thoại Android có cài app <b>MobiFone Đo Sóng</b>.<br>
+             Xem tab <b>Help → mục 5</b> để lấy mã QR cài app.</div>`;
+  }
+
   return `${warn}
-    <div class="banner banner-info" style="margin-top:0;">
-      <b>Trình duyệt không đọc được thông số vô tuyến.</b> Cell ID, tần số, RSRP, RSRQ, SINR chỉ lấy được khi mở
-      bằng app <b>MobiFone Đo Sóng</b> (Android). Đây là chặn cứng của nền tảng web, không phải do thiếu quyền.
-      Trên iPhone thì kể cả app riêng cũng không đọc được — phải xem bằng Field Test Mode.
+    <div class="sig-off">
+      <div class="ic">📵</div>
+      <div class="tt">Trình duyệt không đọc được thông số sóng</div>
+      ${cta}
     </div>
-    <div class="sig-sec">Thông tin web đọc được thật</div>
-    <table class="sig-table">
-      <tr><td>Trạng thái mạng</td><td>${online ? 'Đang có kết nối' : 'Mất kết nối'}</td></tr>
-      <tr><td>Loại kết nối</td><td>${c && c.type ? (isCellular ? 'Di động' : c.type) : 'Không xác định'}</td></tr>
-      <tr><td>Ước lượng băng thông</td><td>${c && c.downlink != null ? c.downlink + ' Mbps' : '—'}</td></tr>
-      <tr><td>Độ trễ ước lượng</td><td>${c && c.rtt != null ? c.rtt + ' ms' : '—'}</td></tr>
-    </table>
-    <div class="small-note" style="margin-top:4px;">
-      Lưu ý kỹ thuật: các số trên là <b>ước lượng thông lượng</b>, không phải tham số vô tuyến.
-      Chỉ số <code>effectiveType</code> của trình duyệt trả "4g" ngay cả khi máy đang bắt 5G thật, nên hệ thống cố ý không hiển thị nó.
-    </div>
-    ${posBlockHtml(pos)}
-    <div class="sig-sec">Cách lấy số liệu ngay bây giờ</div>
-    <div class="small-note">
-      1. Bấm <b>📍 Ghim điểm đo lên bản đồ</b> bên dưới để mở form nhập tay tại đúng vị trí đang đứng.<br>
-      2. Mở Field Test trên máy để đọc số: <b>iPhone</b> quay số <code>*3001#12345#*</code> · <b>Android</b> quay <code>*#*#4636#*#*</code> (một số máy khoá mã này).<br>
-      3. Điền RSRP / RSRQ / Cell ID / băng tần vào form rồi lưu.
-    </div>`;
+
+    <div class="sig-sec">Vị trí</div>
+    ${pos ? `
+      ${dong('Toạ độ', pos.lat.toFixed(6) + ', ' + pos.lon.toFixed(6))}
+      ${dong('Sai số GPS', '±' + Math.round(pos.acc) + ' m')}
+      ${near ? dong('Trạm gần nhất', near.node.n + (near.node.g ? ' (' + near.node.g + ')' : '')) : ''}
+      ${near ? dong('Cách', (near.dist < 1000 ? Math.round(near.dist) + ' m' : (near.dist/1000).toFixed(2) + ' km')
+                    + ' · hướng ' + near.bearing.text) : ''}`
+      : `<div class="banner banner-warn" style="margin:0;">📍 Chưa lấy được vị trí GPS — bật Định vị rồi bấm "Đo lại".</div>`}
+
+    <details class="sig-more">
+      <summary>Vì sao web không đọc được / web đọc được gì</summary>
+      <div>
+        ${dong('Trạng thái mạng', navigator.onLine ? 'Đang có kết nối' : 'Mất kết nối')}
+        ${dong('Loại kết nối', c && c.type ? (isCellular ? 'Di động' : c.type) : 'Không xác định')}
+        ${dong('Ước lượng băng thông', c && c.downlink != null ? c.downlink + ' Mbps' : null)}
+        ${dong('Độ trễ ước lượng', c && c.rtt != null ? c.rtt + ' ms' : null)}
+        <div class="small-note" style="margin-top:6px;">
+          Đây là <b>ước lượng thông lượng</b>, không phải tham số vô tuyến. Không có Web API nào đọc được
+          Cell ID / RSRP / RSRQ / SINR / băng tần — chặn cứng ở tầng nền tảng, không phải thiếu quyền.
+          Chỉ số <code>effectiveType</code> trả "4g" ngay cả khi máy đang bắt 5G thật nên hệ thống cố ý không hiển thị.
+        </div>
+      </div>
+    </details>`;
 }
 
 /** Ghim kết quả thành 1 điểm đo trên bản đồ (dùng lại đúng luồng "Đo sóng" sẵn có). */

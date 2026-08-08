@@ -1,0 +1,65 @@
+# ============================================================================
+#  TU DONG BUILD APK "MobiFone Do Song" TREN GITHUB ACTIONS
+#
+#  Vi sao lam the nay: may build khong can cai Android Studio (~10 GB). Moi lan sua
+#  ma nguon (day file android-src.zip moi len) la Actions tu build lai va tu cap nhat
+#  file APK trong Release "apk-latest". Link tai tren web bam thang vao Release do nen
+#  KHONG BAO GIO doi -> khong phai sua lai web moi lan ra ban moi.
+#
+#  Bam tay: tab Actions -> Build APK -> Run workflow.
+# ============================================================================
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'android-src.zip'
+      - '.github/workflows/build-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build APK MobiFone Do Song
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lay ma nguon repo
+        uses: actions/checkout@v4
+
+      - name: Cai Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Giai nen ma nguon app
+        run: |
+          mkdir -p android
+          unzip -o -q android-src.zip -d android
+          chmod +x android/mobifone-do-song/gradlew
+          ls -R android/mobifone-do-song | head -40
+
+      - name: Build APK release
+        working-directory: android/mobifone-do-song
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Gom file APK
+        run: |
+          mkdir -p out
+          cp android/mobifone-do-song/app/build/outputs/apk/release/*.apk out/MobiFone-Do-Song.apk
+          ls -la out
+
+      - name: Dua APK len Release co dinh "apk-latest"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: MobiFone Do Song - ban moi nhat
+          body: |
+            APK cai truc tiep tren dien thoai Android (8.0 tro len).
+            Tai va cai theo huong dan o tab "Help" cua web ban do.
+            App tu ky noi bo, may se bao "khong ro nguon goc" - day la binh thuong voi app noi bo.
+          files: out/MobiFone-Do-Song.apk
+          make_latest: true

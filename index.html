@@ -134,7 +134,8 @@
   .badge-demo{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:900;
     background:#fff3cd;border:1px solid #ffe08a;color:#8a6a00;font-size:12px;padding:6px 14px;border-radius:20px;
     box-shadow:0 2px 8px rgba(0,0,0,.12);}
-  .map-tools{position:absolute;top:10px;right:10px;z-index:900;display:flex;flex-direction:column;gap:8px;}
+  /* .map-tools (cụm 4 nút góc phải bản đồ) đã GỠ 13/08/2026 — 4 tiện ích chuyển vào nút "➕ Mở rộng"
+     nằm cùng hàng với ô tìm kiếm ở góc trái. */
   .tool-btn{background:#fff;border:1px solid var(--mf-border);border-radius:8px;padding:8px 10px;font-size:12.5px;
     cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.1);display:flex;align-items:center;gap:6px;}
   .tool-btn:hover{background:var(--mf-bg);}
@@ -250,9 +251,18 @@
     font-family:inherit;max-width:100%;}
 
   /* ---- Thanh công cụ đo đạc (góc trái bản đồ): đo khoảng cách / route / diện tích / đo sóng / speedtest ---- */
-  .measure-tools{position:absolute;top:10px;left:10px;z-index:900;display:flex;flex-direction:column;gap:8px;max-width:230px;}
+  .measure-tools{position:absolute;top:10px;left:10px;z-index:900;display:flex;flex-direction:column;gap:8px;max-width:330px;}
+  /* Ô tìm kiếm + nút Công cụ + nút Mở rộng nằm cùng 1 hàng (13/08/2026) */
+  .map-top-row{display:flex;align-items:stretch;gap:6px;}
+  .tool-btn-mini{padding:5px 9px;font-size:11.5px;white-space:nowrap;background:rgba(255,255,255,.72);
+    backdrop-filter:blur(2px);box-shadow:0 1px 4px rgba(0,0,0,.10);}
+  .tool-btn-mini:hover{background:rgba(255,255,255,.95);}
   .measure-tools-toggle{font-weight:600;color:var(--mf-blue-dark);}
   .measure-tools-toggle.open{background:var(--mf-blue);color:#fff;border-color:var(--mf-blue);}
+  #btnExtraToggle{font-weight:600;color:var(--mf-blue-dark);}
+  #btnExtraToggle.open{background:var(--mf-blue);color:#fff;border-color:var(--mf-blue);}
+  /* 2 danh sách sổ ra rộng vừa phải, không kéo giãn cả thanh công cụ */
+  #measureBtns, #extraBtns{max-width:220px;}
   /* Danh sách công cụ khi sổ ra: gộp thành 1 khối liền sát nhau (không có khoảng cách giữa các nút) cho gọn,
      thay vì từng nút rời rạc có bóng đổ riêng — chỉ bo góc + đổ bóng ở khối ngoài cùng. */
   .measure-btns{display:flex;flex-direction:column;gap:0;background:#fff;border:1px solid var(--mf-border);
@@ -273,8 +283,11 @@
   .st-lbl{font-size:10px;color:var(--mf-muted);margin-top:1px;letter-spacing:.01em;}
   .st-rating{display:inline-block;margin-top:8px;padding:3px 11px;border-radius:12px;color:#fff;font-size:12px;font-weight:700;}
   @media (max-width:768px){
-    .measure-tools{top:8px;left:8px;max-width:74vw;}
+    .measure-tools{top:8px;left:8px;max-width:calc(100vw - 62px);}
     .measure-btns .tool-btn{padding:10px 12px;font-size:13px;min-height:40px;}
+    /* Màn hẹp thì cho ô tìm kiếm ăn trọn 1 dòng, 2 nút xuống dòng dưới thay vì bị bóp méo */
+    .map-top-row{flex-wrap:wrap;}
+    .map-top-row .map-search-wrap{flex:1 1 100%;}
   }
 
   /* ---- Ô "tìm kiếm trên bản đồ" (địa chỉ hoặc toạ độ) — GĐ4d 06/08/2026, đặt ngay trên nút "🛠 Công cụ" ---- */
@@ -321,7 +334,9 @@
   .edit-form .actions{margin-top:10px;display:flex;gap:6px;}
   .info-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;}
   .info-table td{padding:4px 6px;border-bottom:1px solid var(--mf-border);vertical-align:top;}
-  .info-table td:first-child{color:var(--mf-muted);white-space:nowrap;width:40%;}
+  .info-table td:first-child{color:var(--mf-muted);white-space:nowrap;width:38%;}
+  /* Dòng số liệu gộp (Traffic, Thuê bao) phải nằm trọn 1 dòng cho dễ đọc — yêu cầu 13/08/2026 */
+  .info-table td.nowrap{white-space:nowrap;}
   .site-name-tooltip{background:transparent !important;border:none !important;border-radius:0;padding:0 2px;box-shadow:none !important;font-size:10.5px;font-weight:700;color:var(--mf-text);text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 3px #fff;opacity:0 !important;pointer-events:none;}
   .site-name-tooltip::before{display:none !important;}
   .site-name-tooltip.leaflet-tooltip-bottom{margin-top:-1px !important;}
@@ -430,8 +445,9 @@
     .stat b{font-size:20px;}
     .stat-grid{gap:10px;}
 
-    .map-tools{top:8px;right:8px;gap:6px;}
     .tool-btn{padding:10px 12px;font-size:13px;min-height:40px;}
+    /* Trên điện thoại vẫn để 2 nút nhỏ, nhưng đủ cao để bấm bằng ngón tay */
+    .tool-btn-mini{padding:7px 9px;font-size:12px;min-height:36px;}
     .site-name-tooltip{font-size:12px;}
 
     .subnav{padding:8px 10px;gap:4px;flex-wrap:wrap;}
@@ -605,25 +621,31 @@
 
     <div id="mapWrap">
       <div class="badge-demo" id="demoBadge">⚠ Chế độ DEMO — thay đổi/PAKH chỉ lưu tạm trong trình duyệt, chưa ghi vào Google Sheet thật</div>
-      <div class="map-tools">
-      <button class="tool-btn" id="btnLocate">📍 Vị trí của tôi</button>
-        <button class="tool-btn" id="btnWeather">🌦 Thời tiết (Windy)</button>
-        <button class="tool-btn" id="btnFit">🗺 Xem toàn bộ</button>
-        <!-- Nút "Góp ý" — TẠM THỜI cho giai đoạn thử nghiệm/"Chỉ xem trước", XOÁ khi web chính thức đưa vào dùng thật -->
-        <button class="tool-btn tool-btn-feedback" id="btnFeedback">💬 Góp ý</button>
-      </div>
 
       <!-- ================= THANH CÔNG CỤ ĐO ĐẠC (góc trái bản đồ) ================= -->
       <div class="measure-tools" id="measureTools">
         <!-- Ô "tìm kiếm trên bản đồ" (địa chỉ hoặc toạ độ) — GĐ4d 06/08/2026 -->
-        <div class="map-search-wrap" id="mapSearchWrap">
-          <div class="map-search-box">
-            <input type="text" id="mapSearchInput" placeholder="🔍 Tìm địa chỉ hoặc toạ độ..." autocomplete="off">
-            <button type="button" id="btnMapSearch">Tìm</button>
+        <!-- Hàng trên: ô tìm kiếm + 2 nút "Công cụ" / "Mở rộng" nằm CÙNG HÀNG bên phải (13/08/2026),
+             trước đây "Công cụ" chiếm nguyên 1 dòng bên dưới còn 4 nút tiện ích chiếm góc phải bản đồ. -->
+        <div class="map-top-row">
+          <div class="map-search-wrap" id="mapSearchWrap">
+            <div class="map-search-box">
+              <input type="text" id="mapSearchInput" placeholder="🔍 Tìm địa chỉ hoặc toạ độ..." autocomplete="off">
+              <button type="button" id="btnMapSearch">Tìm</button>
+            </div>
+            <div class="map-search-results" id="mapSearchResults" style="display:none;"></div>
           </div>
-          <div class="map-search-results" id="mapSearchResults" style="display:none;"></div>
+          <button class="tool-btn tool-btn-mini measure-tools-toggle" id="btnMeasureToolsToggle" title="Công cụ đo đạc và đo sóng">🛠 Công cụ</button>
+          <button class="tool-btn tool-btn-mini" id="btnExtraToggle" title="Các tiện ích khác">➕ Mở rộng</button>
         </div>
-        <button class="tool-btn measure-tools-toggle" id="btnMeasureToolsToggle">🛠 Công cụ</button>
+        <!-- Danh sách tiện ích của nút "Mở rộng" -->
+        <div class="measure-btns" id="extraBtns" style="display:none;">
+          <button class="tool-btn" id="btnLocate">📍 Vị trí của tôi</button>
+          <button class="tool-btn" id="btnWeather">🌦 Thời tiết (Windy)</button>
+          <button class="tool-btn" id="btnFit">🗺 Xem toàn bộ</button>
+          <!-- Nút "Góp ý" — TẠM THỜI cho giai đoạn thử nghiệm/"Chỉ xem trước", XOÁ khi web chính thức đưa vào dùng thật -->
+          <button class="tool-btn tool-btn-feedback" id="btnFeedback">💬 Góp ý</button>
+        </div>
         <div class="measure-btns" id="measureBtns" style="display:none;">
           <!-- "Sóng hiện tại" chuyển vào đây (trước là nút rời trong .map-tools) theo yêu cầu 06/08/2026. -->
           <!-- GỘP 08/08/2026: trước đây có 2 mục đo sóng ("Sóng hiện tại" đọc tự động và "Đo sóng"
@@ -2001,11 +2023,11 @@ function fetchStationInfo(tenTram){
 }
 function renderStationInfoTable(info, node){
   return `<table class="info-table">
-      <tr><td>Tên trạm cũ (KML)</td><td>${node.n}</td></tr>
+      <tr><td>Tên trạm cũ</td><td>${node.n}</td></tr>
       <tr><td>Tên trạm mới</td><td>${info.ma_moi || '-'}</td></tr>
-      <tr><td>Huyện / Tỉnh</td><td>${[info.huyen, info.tinh].filter(Boolean).join(' — ') || '-'}</td></tr>
-      <tr><td>Người quản lý (VHKT)</td><td>${info.nguoi_ql || '-'}</td></tr>
-      <tr><td>SĐT quản lý trạm</td><td>${info.sdt_qlt || '-'}</td></tr>
+      <tr><td>Xã / Tỉnh</td><td>${[info.xa, info.tinh].filter(Boolean).join(' — ') || '-'}</td></tr>
+      <tr><td>Người quản lý</td><td>${info.nguoi_ql || '-'}</td></tr>
+      <tr><td>SĐT QLT</td><td>${info.sdt_qlt || '-'}</td></tr>
       <tr><td>Loại trạm</td><td>${info.loai_tram || '-'}</td></tr>
       <tr><td>Công nghệ</td><td>${info.cong_nghe || node.g || '-'}</td></tr>
       ${info.uu_tien ? `<tr><td>Mức ưu tiên</td><td>${info.uu_tien}</td></tr>` : ''}
@@ -2025,12 +2047,13 @@ function renderStationTrafficRows(tenTramCu){
   const s3 = num(t.s3), s4 = num(t.s4), stt = num(t.st);
   const rows = [];
   if(erl != null || data != null){
-    rows.push(`<tr><td>Traffic</td><td>Thoại (Erl): <b>${erl != null ? erl.toLocaleString('vi-VN') : '-'}</b>`
-            + ` &nbsp;·&nbsp; Data (Gb): <b>${data != null ? data.toFixed(1) : '-'}</b></td></tr>`);
+    // Rút gọn 13/08/2026: bỏ dấu chấm ngăn cách, chỉ để 1 dấu cách cho gọn, giữ nguyên 1 dòng
+    rows.push(`<tr><td>Traffic</td><td class="nowrap">CS(Erl): <b>${erl != null ? erl.toLocaleString('vi-VN') : '-'}</b>`
+            + ` PS(GB): <b>${data != null ? data.toFixed(1) : '-'}</b></td></tr>`);
   }
   if(s3 != null || s4 != null || stt != null){
-    rows.push(`<tr><td>Thuê bao</td><td>3G: <b>${fmt(s3)}</b> &nbsp;·&nbsp; 4G: <b>${fmt(s4)}</b>`
-            + ` &nbsp;·&nbsp; Total: <b>${fmt(stt)}</b></td></tr>`);
+    rows.push(`<tr><td>Thuê bao</td><td class="nowrap">3G: <b>${fmt(s3)}</b> 4G: <b>${fmt(s4)}</b>`
+            + ` All: <b>${fmt(stt)}</b></td></tr>`);
   }
   return rows.join('');
 }
@@ -2296,14 +2319,96 @@ function enableDragRelocate(marker, node){
    lần đầu có ai đó truy cập `.marker` / `.layer`. Dùng getter nên MỌI đoạn code cũ
    (`siteLeaf.get(id).marker`, `cableLnLeaf.get(id).layer`...) chạy y nguyên, không phải sửa.
    ============================================================================ */
+/* Thứ tự chồng icon khi nhiều trạm TRÙNG VỊ TRÍ (yêu cầu 13/08/2026): 5G > 4G > 3G > 2G,
+   rồi tới PTM, sau cùng là hạ tầng nhà mạng khác và thuê bao FTTx.
+   Leaflet tính z-index = toạ độ y trên màn hình + zIndexOffset, mà y ở mức cả tỉnh có thể
+   chênh vài nghìn pixel — nên bước nhảy phải đủ lớn, để 1000 là không ăn thua. */
+const Z_LOP = {'5G':500000, '4G':400000, '3G':300000, '2G':200000};
+const Z_FTTX = 0;
+function siteZOffset(node){
+  const ic = String(node.ic || '');
+  if(ic === 'vnpt' || ic === 'vtl') return 100000;
+  if(ic.indexOf('ptm') === 0) return 150000;
+  const g = String(node.g || node.ic || '').toUpperCase();
+  for(const k of ['5G','4G','3G','2G']) if(g.indexOf(k) >= 0) return Z_LOP[k];
+  return 160000;   // nhánh chưa gán công nghệ: trên nhà mạng khác, dưới các lớp MBF đã biết
+}
 function makeSiteMarker(node){
   const [lon,lat] = node.c;
-  const m = L.marker([lat,lon], {icon:siteIconFor(node.g, node.ic), title:node.n, draggable:false});
+  const m = L.marker([lat,lon], {icon:siteIconFor(node.g, node.ic), title:node.n, draggable:false,
+                                 zIndexOffset: siteZOffset(node)});
   m._siteName = node.n;
+  m._tenHien = node.n;
   m.bindPopup(() => buildSitePopup(m, node));
-  m.on('contextmenu', (e) => { L.DomEvent.stop(e); if(requireEditor('kéo-thả đổi vị trí trạm')) enableDragRelocate(m, node); });
+  m.on('click', () => tachBung(m));
+  m.on('contextmenu', (e) => {
+    L.DomEvent.stop(e);
+    tachThuGon();   // đang toả ra mà kéo-thả thì toạ độ gốc bị sai -> thu lại trước
+    if(requireEditor('kéo-thả đổi vị trí trạm')) enableDragRelocate(m, node);
+  });
   return m;
 }
+
+/* ============================================================================
+   TÁCH ICON TRÙNG VỊ TRÍ (13/08/2026) — kiểu Google Earth
+   Nhiều lớp công nghệ của cùng một nhà trạm nằm đúng một toạ độ, nên icon dưới bị
+   che hoàn toàn, người dùng tưởng chỗ đó chỉ có 1 trạm. Bấm vào icon thì các icon
+   bị che toả đều ra quanh vị trí gốc, mỗi cái có 1 nét đứt nối về đúng chỗ cũ.
+   ============================================================================ */
+var TACH = {khoa:null, ds:[], lop:null, mo:false, hen:null};
+const TACH_SO_LE = 5;    // làm tròn toạ độ tới ~1 m để gom "cùng vị trí"
+function tachKhoa(ll){ return ll.lat.toFixed(TACH_SO_LE) + ',' + ll.lng.toFixed(TACH_SO_LE); }
+function tachGocCua(m){ return m.__tachGoc || m.getLatLng(); }
+function tachLop(){ return TACH.lop || (TACH.lop = L.layerGroup()); }
+function tachNhom(khoa){
+  const ds = [];
+  const quet = lop => { if(lop) lop.eachLayer(l => {
+    if(l instanceof L.Marker && tachKhoa(tachGocCua(l)) === khoa) ds.push(l);
+  }); };
+  quet(sitesCluster);
+  quet(fttxLayer);
+  return ds;
+}
+function tachThuGon(){
+  if(!TACH) return;                       // gọi sớm hơn lúc khai báo (var -> undefined) thì bỏ qua
+  clearTimeout(TACH.hen);
+  if(!TACH.mo) return;
+  TACH.ds.forEach(m => { if(m.__tachGoc){ m.setLatLng(m.__tachGoc); delete m.__tachGoc; } });
+  tachLop().clearLayers();
+  if(map.hasLayer(TACH.lop)) map.removeLayer(TACH.lop);
+  TACH.mo = false; TACH.khoa = null; TACH.ds = [];
+}
+/** Toả các icon trùng vị trí ra. Trả về true nếu chỗ đó có từ 2 icon trở lên. */
+function tachBung(m){
+  if(!TACH) return false;
+  const goc = tachGocCua(m), khoa = tachKhoa(goc);
+  if(TACH.mo && TACH.khoa === khoa){ clearTimeout(TACH.hen); return true; }
+  tachThuGon();
+  const ds = tachNhom(khoa);
+  if(ds.length < 2) return false;
+  // Icon ưu tiên cao nhất (5G > 4G > 3G ...) giữ nguyên chỗ cũ, phần còn lại toả đều quanh nó
+  ds.sort((a, b) => (b.options.zIndexOffset || 0) - (a.options.zIndexOffset || 0));
+  const tam = map.latLngToLayerPoint(goc);
+  const conLai = ds.slice(1);
+  const banKinh = 48 + Math.min(conLai.length, 10) * 5;   // đủ xa để thấy rõ nét nối, icon không đè nhau
+  conLai.forEach((mk, i) => {
+    const a = (2 * Math.PI * i) / conLai.length - Math.PI / 2;
+    const ll = map.layerPointToLatLng(L.point(tam.x + banKinh * Math.cos(a), tam.y + banKinh * Math.sin(a)));
+    mk.__tachGoc = goc;
+    mk.setLatLng(ll);
+    L.polyline([goc, ll], {color:'#33445c', weight:1.2, opacity:.6, dashArray:'3,3', interactive:false})
+      .addTo(tachLop());
+  });
+  ds[0].__tachGoc = goc;
+  tachLop().addTo(map);
+  TACH.mo = true; TACH.khoa = khoa; TACH.ds = ds;
+  return true;
+}
+map.on('zoomstart', tachThuGon);
+map.on('click', tachThuGon);
+// Đóng popup rồi mở popup khác trong vòng 0,4 giây (bấm sang icon vừa toả ra) thì KHÔNG thu lại
+map.on('popupopen', () => clearTimeout(TACH.hen));
+map.on('popupclose', () => { clearTimeout(TACH.hen); TACH.hen = setTimeout(tachThuGon, 400); });
 function makeCablePtMarker(node){
   const [lon,lat] = node.c;
   const m = L.marker([lat,lon], {icon:cablePtIcon, title:node.n});
@@ -2369,6 +2474,7 @@ function syncLayersForLeaves(kind, leaves, checked){
     // hàm này chạy ngay lúc khởi tạo bản đồ, sớm hơn chỗ khai báo const fltChon bên dưới,
     // đụng vào sẽ vỡ cả trang vì lỗi vùng chết (temporal dead zone).
     if(fltDangLoc){ fltApDung(); return; }
+    if(typeof tachThuGon === 'function') tachThuGon();
     const markers = leaves.map(lf => siteLeaf.get(lf.id).marker);
     checked ? sitesCluster.addLayers(markers) : sitesCluster.removeLayers(markers);
   } else if(kind === 'cable'){
@@ -2839,6 +2945,9 @@ function fltTinhIds(){
     thì bản đồ trống — vì vậy chú thích bên dưới luôn báo rõ "khớp X, đang hiện Y" và
     kèm nút bật nhanh các trạm khớp. */
 function fltApDung(){
+  // Đang toả icon trùng vị trí mà đổi bộ lọc thì marker bị bỏ ra/thêm vào khi đang lệch chỗ
+  // -> thu lại trước cho toạ độ về đúng vị trí thật.
+  if(typeof tachThuGon === 'function') tachThuGon();
   const dangLoc = fltDangBat();
   fltDangLoc = dangLoc;
   const ids = dangLoc ? fltTinhIds() : null;
@@ -3343,9 +3452,23 @@ const measureToggleEl = document.getElementById('btnMeasureToolsToggle');
 function setMeasureListOpen(open){
   measureBtnsEl.style.display = open ? 'flex' : 'none';
   measureToggleEl.classList.toggle('open', open);
+  if(open && typeof setExtraListOpen === 'function') setExtraListOpen(false);
 }
 measureToggleEl.addEventListener('click', () => setMeasureListOpen(measureBtnsEl.style.display === 'none'));
 setupDismissableList(measureToggleEl, measureBtnsEl, () => measureBtnsEl.style.display !== 'none', () => setMeasureListOpen(false));
+
+/* Nút "➕ Mở rộng" — gom 4 tiện ích trước đây chiếm nguyên góc phải bản đồ (13/08/2026).
+   Hai danh sách loại trừ nhau: mở cái này thì thu cái kia, tránh che kín nửa bản đồ. */
+var extraBtnsEl = document.getElementById('extraBtns');       // var: setMeasureListOpen ở trên có tham chiếu tới
+var extraToggleEl = document.getElementById('btnExtraToggle');
+function setExtraListOpen(open){
+  extraBtnsEl.style.display = open ? 'flex' : 'none';
+  extraToggleEl.classList.toggle('open', open);
+  if(open) setMeasureListOpen(false);
+}
+extraToggleEl.addEventListener('click', () => setExtraListOpen(extraBtnsEl.style.display === 'none'));
+setupDismissableList(extraToggleEl, extraBtnsEl, () => extraBtnsEl.style.display !== 'none', () => setExtraListOpen(false));
+extraBtnsEl.querySelectorAll('.tool-btn').forEach(b => b.addEventListener('click', () => setExtraListOpen(false)));
 function setMeasureMode(mode){
   document.getElementById('speedtestPanel').style.display = 'none';
   if(measureMode === mode){ stopMeasureMode(); return; }
@@ -6907,7 +7030,8 @@ function fttxPos(s){
 }
 
 /* ---------- Lớp bản đồ ---------- */
-const fttxLayer = L.layerGroup();
+// var: hàm tachNhom() nằm trước khối này trong file có tham chiếu tới (tránh vùng chết TDZ)
+var fttxLayer = L.layerGroup();
 const fttxMarkerByKey = new Map();
 function fttxIcon(s){
   const g = fttxGeoInfo(s.at);
@@ -6924,8 +7048,9 @@ function fttxEnsureMarker(s){
   if(m) return m;
   const p = fttxPos(s);
   if(p.lat == null || p.lon == null) return null;
-  m = L.marker([p.lat, p.lon], {icon: fttxIcon(s)});
+  m = L.marker([p.lat, p.lon], {icon: fttxIcon(s), zIndexOffset: Z_FTTX});
   m.bindPopup(() => buildFttxPopup(s), {maxWidth: 330, minWidth: 265});
+  m.on('click', () => tachBung(m));
   m._fttx = s;
   fttxMarkerByKey.set(key, m);
   return m;
@@ -7158,8 +7283,8 @@ function fttxInfoHtml(s){
       ${fttxRow('Chặn cắt', s.cc)}
       ${fttxRow('Ngày đấu nối', (s.dn||'').split(' ')[0])}
       ${fttxRow('Hết hạn gói', (s.nkt||'').split(' ')[0])}
-      <tr><td>NV vận hành</td><td>${nvvh}</td></tr>
-      <tr><td>SĐT NV vận hành</td><td>${sdtvh}</td></tr>
+      <tr><td>Tên nhân viên</td><td>${nvvh}</td></tr>
+      <tr><td>USER</td><td>${sdtvh}</td></tr>
       ${fttxRow('NV phát triển TB', s.tnv)}
       ${fttxRow('Cửa hàng', s.ch)}
     </table>

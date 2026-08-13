@@ -678,6 +678,7 @@
           <div class="sl" id="dsSoLieu"></div>
           <div class="ft">
             <button class="btn btn-outline btn-sm" id="dsXuatTam" title="Tải nhanh về máy dạng CSV">⬇ CSV</button>
+            <button class="btn btn-outline btn-sm" id="dsLuuBuoi" title="Kết thúc buổi đo và lưu vào máy">💾 Lưu</button>
             <button class="btn btn-outline btn-sm" id="dsXoa" title="Xoá toàn bộ điểm đo trên bản đồ">🗑 Xoá</button>
           </div>
         </div>
@@ -868,8 +869,30 @@
         <div class="page-inner" id="dsTabLog">
           <div class="card">
             <h3>📁 Các buổi đo đã lưu</h3>
-            <div class="small-note" id="dsLogNote" style="margin-bottom:8px;">Đang chuẩn bị (đợt 3): lưu buổi đo trong máy, đồng bộ lên Google Drive và xuất Excel + KMZ.</div>
-            <div id="dsLogWrap"></div>
+            <div class="small-note" style="margin-bottom:8px;">
+              Buổi đo được lưu <b>ngay trong máy</b> khi bấm "Dừng đo" (đo route) hoặc "💾 Lưu buổi"
+              (đo điểm) — không cần mạng. Khi có mạng thì bấm "☁ Đồng bộ Drive" để đẩy lên thư mục
+              chung, mỗi người một thư mục con mang tên tài khoản của mình.
+              Tên file đặt theo <b>dd-mm-yyyy-giờphútgiây-tên user</b>
+              (dùng dấu gạch ngang thay dấu "/" vì Windows và Google Drive không cho phép dấu "/" trong tên file).
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+              <button class="btn btn-primary btn-sm" id="dsLogXuat">⬇ Xuất Excel + KMZ (buổi đã chọn)</button>
+              <button class="btn btn-outline btn-sm" id="dsLogDongBo">☁ Đồng bộ Drive (buổi đã chọn)</button>
+              <button class="btn btn-outline btn-sm" id="dsLogXem">🗺 Xem lại trên bản đồ</button>
+              <button class="btn btn-outline btn-sm" id="dsLogXoa">🗑 Xoá buổi đã chọn</button>
+            </div>
+            <div id="dsLogBanner"></div>
+            <div style="max-height:56vh;overflow:auto;margin-top:8px;">
+              <table class="data-table">
+                <thead><tr>
+                  <th style="width:34px;"><input type="checkbox" id="dsLogTickHet" title="Chọn tất cả"></th>
+                  <th>Tên buổi đo</th><th>Bắt đầu</th><th>Thời lượng</th><th>Số điểm</th>
+                  <th>Kiểu</th><th>Đồng bộ Drive</th>
+                </tr></thead>
+                <tbody id="dsLogTbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -3711,7 +3734,9 @@ const DS = {
   cheDo: 'diem',       // 'diem' | 'route'
   hienThi: 'muc_thu',
   tIdle: null, tSpeed: null, watchId: null, viTri: null,
-  spDangChay: false, batDau: null
+  spDangChay: false, batDau: null,
+  buoiId: null, buoiBatDau: 0, buoiUser: '',    // GĐ9 đợt 3: gom điểm đo thành "buổi đo" để lưu/xuất
+  veDuong: false                                // bật khi xem lại 1 buổi đo route đã lưu
 };
 const dsLayer = L.layerGroup();
 let dsDuong = null;      // đường nối các điểm khi đo route
@@ -3796,7 +3821,7 @@ function dsVeCham(){
   // Đường nối thể hiện lộ trình đã đi (chỉ có ý nghĩa ở chế độ route)
   if(dsDuong){ map.removeLayer(dsDuong); dsDuong = null; }
   const toado = DS.diem.filter(d => isValidLatLon(d.lat, d.lon)).map(d => [d.lat, d.lon]);
-  if(DS.cheDo === 'route' && toado.length > 1){
+  if((DS.cheDo === 'route' || DS.veDuong) && toado.length > 1){
     dsDuong = L.polyline(toado, {color:'#5a6b85', weight:2, opacity:.55, dashArray:'4,4'});
     dsLayer.addLayer(dsDuong);
   }
@@ -3865,8 +3890,10 @@ function dsTuIdle(d, pos){
 }
 function dsThemDiem(rec){
   if(typeof cfGanServing === 'function') cfGanServing(rec);
+  if(typeof dsMoBuoi === 'function') rec.buoi = dsMoBuoi();
   DS.diem.push(rec);
   dsVeCham();
+  if(typeof dsGhiTam === 'function') dsGhiTam();     // ghi tạm vào máy, mất pin giữa chừng vẫn còn
   return rec;
 }
 
@@ -3973,8 +4000,15 @@ function dsDungRoute(){
   clearInterval(DS.tSpeed); DS.tSpeed = null;
   if(DS.watchId != null && navigator.geolocation){ navigator.geolocation.clearWatch(DS.watchId); DS.watchId = null; }
   dsCapNhatNut();
-  dsVeTrangThai('Đã ghi ' + DS.diem.length + ' điểm lên bản đồ.');
   dsVeCham();
+  // Dừng route = kết thúc buổi đo -> chốt và lưu ngay vào máy (không cần mạng)
+  if(typeof dsLuuBuoi === 'function'){
+    dsLuuBuoi(true).then(b => dsVeTrangThai(b
+      ? `Đã lưu buổi đo "${b.ten}" (${b.soDiem} điểm) vào máy.`
+      : 'Đã dừng — chưa ghi được điểm nào.'));
+  } else {
+    dsVeTrangThai('Đã ghi ' + DS.diem.length + ' điểm lên bản đồ.');
+  }
 }
 
 /* ---- Hiển thị kết quả trong khung (gọn, hiện đồng thời cả 2 nội dung nếu tick cả 2) ---- */
@@ -4063,8 +4097,10 @@ document.getElementById('dsHienThi').addEventListener('change', e => { DS.hienTh
 document.getElementById('dsXuatTam').addEventListener('click', dsXuatCsv);
 document.getElementById('dsXoa').addEventListener('click', () => {
   if(!DS.diem.length) return;
-  if(!confirm('Xoá toàn bộ ' + DS.diem.length + ' điểm đo khỏi bản đồ?')) return;
-  DS.diem.length = 0; dsVeCham();
+  if(!confirm('Xoá toàn bộ ' + DS.diem.length + ' điểm đo khỏi bản đồ?\n'
+            + '(Buổi đo đã lưu trong máy vẫn còn ở tab "Đo sóng → Kết quả đo".)')) return;
+  DS.diem.length = 0; DS.buoiId = null; DS.buoiBatDau = 0; DS.veDuong = false;
+  dsVeCham();
   document.getElementById('dsPanel').classList.remove('hien');
 });
 document.getElementById('dsThuGon').addEventListener('click', () => {
@@ -4502,6 +4538,366 @@ async function cfNapTuMay(){
   });
   map.on('moveend zoomend', () => { if(CF.cells.length) cfVeCanhSong(); });
   cfNapTuMay();
+})();
+
+/* ============================================================================
+   BUỔI ĐO — LƯU MÁY, XUẤT EXCEL + KMZ, ĐỒNG BỘ DRIVE (GĐ9 đợt 3, 13/08/2026)
+   Chốt với anh Nam: "Lưu trong máy trước, đồng bộ sau" — đo ngoài hiện trường
+   hay mất sóng, nếu bắt phải có mạng mới ghi được thì mất trắng buổi đo.
+   ============================================================================ */
+
+var DSLOG = {ds: [], chon: new Set(), hen: null};
+
+function dsUserHienTai(){
+  const a = (CONFIG && CONFIG.auth) || {};
+  const t = a.username || a.hoTen || (CONFIG.currentUser && CONFIG.currentUser.name) || 'khach';
+  return String(t).trim() || 'khach';
+}
+/** Tên user dùng làm tên thư mục/tên file: bỏ dấu, bỏ ký tự Windows/Drive cấm. */
+function dsUserSlug(s){
+  return String(s || 'khach').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '_').replace(/_+/g, '_').slice(0, 40) || 'khach';
+}
+function dsHai(n){ return String(n).padStart(2, '0'); }
+/** dd-mm-yyyy-HHMMSS-user (yêu cầu gốc ghi "dd/mm/yyyy" nhưng dấu "/" không đặt được
+    trong tên file trên Windows lẫn Google Drive nên đổi thành dấu gạch ngang). */
+function dsTenBuoi(khiNao, user){
+  const d = new Date(khiNao);
+  return `${dsHai(d.getDate())}-${dsHai(d.getMonth() + 1)}-${d.getFullYear()}`
+       + `-${dsHai(d.getHours())}${dsHai(d.getMinutes())}${dsHai(d.getSeconds())}`
+       + `-${dsUserSlug(user)}`;
+}
+function dsThoiLuong(ms){
+  if(!ms || ms < 0) return '—';
+  const g = Math.round(ms / 1000), p = Math.floor(g / 60), gio = Math.floor(p / 60);
+  return gio ? `${gio}h${dsHai(p % 60)}` : `${p}:${dsHai(g % 60)}`;
+}
+
+/* ---- Vòng đời 1 buổi đo ---- */
+function dsMoBuoi(){
+  if(DS.buoiId) return DS.buoiId;
+  DS.veDuong = false;                 // bắt đầu buổi mới thì thôi chế độ "xem lại"
+  const t = Date.now();
+  DS.buoiId = 'b' + t;
+  DS.buoiBatDau = t;
+  DS.buoiUser = dsUserHienTai();
+  return DS.buoiId;
+}
+function dsDiemCuaBuoi(id){ return DS.diem.filter(d => d.buoi === id); }
+/** Ghi tạm liên tục (giãn 1,5 giây) để mất pin giữa chừng vẫn còn dữ liệu. */
+function dsGhiTam(){
+  if(!DS.buoiId) return;
+  clearTimeout(DSLOG.hen);
+  DSLOG.hen = setTimeout(() => dsLuuBuoi(false), 1500);
+}
+async function dsLuuBuoi(dong){
+  if(!DS.buoiId) return null;
+  const id = DS.buoiId, diem = dsDiemCuaBuoi(id);
+  if(!diem.length){ if(dong){ DS.buoiId = null; } return null; }
+  const ban = {
+    id, ten: dsTenBuoi(DS.buoiBatDau, DS.buoiUser), user: DS.buoiUser,
+    batDau: DS.buoiBatDau, ketThuc: Date.now(),
+    kieu: DS.cheDo === 'route' ? 'route' : 'điểm',
+    soDiem: diem.length, diem, daDongBo: false, driveUrl: ''
+  };
+  const cu = DSLOG.ds.findIndex(x => x.id === id);
+  if(cu >= 0) DSLOG.ds[cu] = ban; else DSLOG.ds.unshift(ban);
+  DSLOG.ds.sort((a, b) => b.batDau - a.batDau);
+  await idbLuu('log:' + id, ban);
+  if(dong){ DS.buoiId = null; DS.buoiBatDau = 0; }
+  dsLogVeBang();
+  return ban;
+}
+async function dsLogNap(){
+  try {
+    const db = await idbMo();
+    const ds = await new Promise((ok, loi) => {
+      const t = db.transaction(IDB_KHO, 'readonly'), st = t.objectStore(IDB_KHO);
+      const rq = st.getAll ? st.getAll() : null;
+      if(!rq) return ok([]);
+      rq.onsuccess = () => ok(rq.result || []);
+      rq.onerror = () => loi(rq.error);
+    });
+    DSLOG.ds = ds.filter(x => x && x.id && x.diem).sort((a, b) => b.batDau - a.batDau);
+  } catch(e){ DSLOG.ds = DSLOG.ds || []; }
+  dsLogVeBang();
+}
+function dsLogVeBang(){
+  const tb = document.getElementById('dsLogTbody');
+  if(!tb) return;
+  if(!DSLOG.ds.length){
+    tb.innerHTML = '<tr><td colspan="7" class="empty-row">Chưa có buổi đo nào được lưu.</td></tr>';
+    return;
+  }
+  tb.innerHTML = DSLOG.ds.map(b => `<tr>
+    <td><input type="checkbox" class="dsLogTick" data-id="${b.id}" ${DSLOG.chon.has(b.id) ? 'checked' : ''}></td>
+    <td><b>${escapeHtmlLite(b.ten)}</b></td>
+    <td>${new Date(b.batDau).toLocaleString('vi-VN')}</td>
+    <td>${dsThoiLuong(b.ketThuc - b.batDau)}</td>
+    <td>${b.soDiem}</td>
+    <td>${escapeHtmlLite(b.kieu)}</td>
+    <td>${b.daDongBo
+        ? (b.driveUrl ? `<a href="${escapeHtmlLite(b.driveUrl)}" target="_blank" rel="noopener">✅ Đã lên Drive</a>` : '✅ Đã lên Drive')
+        : '<span style="color:var(--mf-muted);">Chỉ có trong máy</span>'}</td>
+  </tr>`).join('');
+  tb.querySelectorAll('.dsLogTick').forEach(ck => ck.addEventListener('change', () => {
+    ck.checked ? DSLOG.chon.add(ck.dataset.id) : DSLOG.chon.delete(ck.dataset.id);
+  }));
+}
+function dsLogDaChon(){ return DSLOG.ds.filter(b => DSLOG.chon.has(b.id)); }
+function dsLogBao(html){ const el = document.getElementById('dsLogBanner'); if(el) el.innerHTML = html; }
+
+/* ---- Xuất Excel tổng hợp ---- */
+const DSLOG_COT = [
+  ['Buổi đo', b => b.ten], ['Thời gian', d => new Date(d.t).toLocaleString('vi-VN')],
+  ['Lat', d => d.lat], ['Long', d => d.lon], ['Công nghệ', d => d.gen],
+  ['Cell ID', d => d.cellId], ['PCI/SC', d => d.pci], ['TAC/LAC', d => d.tac], ['Tần số', d => d.arfcn],
+  ['RSRP (dBm)', d => d.rsrp], ['RSCP (dBm)', d => d.rscp], ['RSRQ (dB)', d => d.rsrq],
+  ['Ec/Io (dB)', d => d.ecio], ['SINR (dB)', d => d.sinr],
+  ['Tải xuống (Mbps)', d => d.dl], ['Tải lên (Mbps)', d => d.ul], ['Ping (ms)', d => d.ping],
+  ['Ô phục vụ', d => d.svCell], ['Site phục vụ', d => d.svSite], ['Azimuth', d => d.svAz],
+  ['Cách khớp', d => d.svCach]
+];
+function dsLogWorkbook(buoi){
+  const wb = XLSX.utils.book_new();
+  const tong = [DSLOG_COT.map(c => c[0])];
+  buoi.forEach(b => b.diem.forEach(d =>
+    tong.push(DSLOG_COT.map((c, i) => i === 0 ? b.ten : c[1](d)))));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tong), 'Tong hop diem do');
+  const tt = [['Buổi đo', 'Người đo', 'Bắt đầu', 'Kết thúc', 'Thời lượng', 'Kiểu đo', 'Số điểm',
+               'RSRP trung bình', 'DL trung bình (Mbps)', 'UL trung bình (Mbps)']];
+  const tb = (arr) => { const v = arr.filter(x => x !== null && x !== undefined && isFinite(x));
+                        return v.length ? +(v.reduce((a, c) => a + (+c), 0) / v.length).toFixed(1) : ''; };
+  buoi.forEach(b => tt.push([b.ten, b.user, new Date(b.batDau).toLocaleString('vi-VN'),
+    new Date(b.ketThuc).toLocaleString('vi-VN'), dsThoiLuong(b.ketThuc - b.batDau), b.kieu, b.soDiem,
+    tb(b.diem.map(d => d.rsrp)), tb(b.diem.map(d => d.dl)), tb(b.diem.map(d => d.ul))]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tt), 'Danh sach buoi do');
+  return wb;
+}
+
+/* ---- Đóng gói KMZ (ZIP dạng STORE, tự viết để không phải thêm thư viện ngoài,
+       vì web này còn phải mở được ở nơi sóng yếu — càng ít file tải càng tốt) ---- */
+let _crcBang = null;
+function dsCrc32(u8){
+  if(!_crcBang){
+    _crcBang = new Int32Array(256);
+    for(let n = 0; n < 256; n++){
+      let c = n;
+      for(let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      _crcBang[n] = c;
+    }
+  }
+  let c = -1;
+  for(let i = 0; i < u8.length; i++) c = (c >>> 8) ^ _crcBang[(c ^ u8[i]) & 0xFF];
+  return (c ^ -1) >>> 0;
+}
+function dsZipStore(files){
+  const enc = new TextEncoder();
+  const cuc = [], trungTam = [];
+  let viTri = 0, tongCT = 0;
+  files.forEach(f => {
+    const ten = enc.encode(f.ten), data = f.data, crc = dsCrc32(data);
+    const lfh = new Uint8Array(30), v1 = new DataView(lfh.buffer);
+    v1.setUint32(0, 0x04034b50, true); v1.setUint16(4, 20, true); v1.setUint16(6, 0x0800, true);
+    v1.setUint32(14, crc, true); v1.setUint32(18, data.length, true); v1.setUint32(22, data.length, true);
+    v1.setUint16(26, ten.length, true);
+    cuc.push(lfh, ten, data);
+    const cdh = new Uint8Array(46), v2 = new DataView(cdh.buffer);
+    v2.setUint32(0, 0x02014b50, true); v2.setUint16(4, 20, true); v2.setUint16(6, 20, true);
+    v2.setUint16(8, 0x0800, true); v2.setUint32(16, crc, true);
+    v2.setUint32(20, data.length, true); v2.setUint32(24, data.length, true);
+    v2.setUint16(28, ten.length, true); v2.setUint32(42, viTri, true);
+    trungTam.push(cdh, ten);
+    viTri += 30 + ten.length + data.length;
+    tongCT += 46 + ten.length;
+  });
+  const eocd = new Uint8Array(22), v3 = new DataView(eocd.buffer);
+  v3.setUint32(0, 0x06054b50, true);
+  v3.setUint16(8, files.length, true); v3.setUint16(10, files.length, true);
+  v3.setUint32(12, tongCT, true); v3.setUint32(16, viTri, true);
+  const phan = cuc.concat(trungTam, [eocd]);
+  const tong = phan.reduce((a, c) => a + c.length, 0);
+  const out = new Uint8Array(tong);
+  let o = 0;
+  phan.forEach(p => { out.set(p, o); o += p.length; });
+  return out;
+}
+function dsKmlMau(hex){
+  // KML dùng aabbggrr chứ không phải #rrggbb
+  const h = String(hex || '#888888').replace('#', '');
+  return 'ff' + h.slice(4, 6) + h.slice(2, 4) + h.slice(0, 2);
+}
+function dsXmlEsc(s){
+  return String(s == null ? '' : s).replace(/[<>&'"]/g,
+    c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
+}
+function dsKmlMoTa(d){
+  const dong = [];
+  const them = (k, v, dv) => { if(v !== null && v !== undefined && v !== '') dong.push(`${k}: ${v}${dv || ''}`); };
+  them('Thời gian', new Date(d.t).toLocaleString('vi-VN'));
+  them('Công nghệ', d.gen); them('Cell ID', d.cellId); them('PCI/SC', d.pci);
+  them('TAC/LAC', d.tac); them('Tần số', d.arfcn);
+  them('RSRP', d.rsrp, ' dBm'); them('RSCP', d.rscp, ' dBm');
+  them('RSRQ', d.rsrq, ' dB'); them('Ec/Io', d.ecio, ' dB'); them('SINR', d.sinr, ' dB');
+  them('Tải xuống', d.dl, ' Mbps'); them('Tải lên', d.ul, ' Mbps'); them('Ping', d.ping, ' ms');
+  them('Ô phục vụ', d.svCell); them('Cách khớp', d.svCach);
+  return dsXmlEsc(dong.join('\n'));
+}
+/** KMZ: mỗi buổi đo 1 folder, chấm tô theo đúng tiêu chí đang chọn trên bản đồ,
+    kèm đường đi và (nếu có cell file) đường nối tới ô phục vụ. */
+function dsKmlNoiDung(buoi, tieuChi){
+  const mau = new Map();
+  const styleId = hex => {
+    const id = 's' + hex.replace('#', '');
+    if(!mau.has(id)) mau.set(id, hex);
+    return id;
+  };
+  const than = buoi.map(b => {
+    const pm = b.diem.map(d => {
+      if(!isValidLatLon(d.lat, d.lon)) return '';
+      const g = dsGiaTri(d, tieuChi);
+      const hex = !g ? DS_MAU.xam : (g.thang === 'cellid' ? '#888888' : dsMauTheoThang(g.thang, g.v));
+      return `<Placemark><name>${dsXmlEsc(new Date(d.t).toLocaleTimeString('vi-VN'))}</name>`
+        + `<styleUrl>#${styleId(hex)}</styleUrl>`
+        + `<description>${dsKmlMoTa(d)}</description>`
+        + `<Point><coordinates>${d.lon},${d.lat},0</coordinates></Point></Placemark>`;
+    }).join('');
+    const toado = b.diem.filter(d => isValidLatLon(d.lat, d.lon)).map(d => `${d.lon},${d.lat},0`);
+    const duong = toado.length > 1
+      ? `<Placemark><name>Lộ trình</name><styleUrl>#lineRoute</styleUrl>`
+        + `<LineString><tessellate>1</tessellate><coordinates>${toado.join(' ')}</coordinates></LineString></Placemark>` : '';
+    const sv = b.diem.filter(d => d.svLat != null && isValidLatLon(d.lat, d.lon) && isValidLatLon(d.svLat, d.svLon))
+      .map(d => `<Placemark><name>${dsXmlEsc(d.svCell || '')}</name><styleUrl>#lineServing</styleUrl>`
+        + `<LineString><coordinates>${d.lon},${d.lat},0 ${d.svLon},${d.svLat},0</coordinates></LineString></Placemark>`).join('');
+    const folderSv = sv ? `<Folder><name>Nối tới ô phục vụ</name>${sv}</Folder>` : '';
+    return `<Folder><name>${dsXmlEsc(b.ten)}</name>`
+      + `<description>${dsXmlEsc(b.soDiem + ' điểm · ' + b.kieu + ' · ' + new Date(b.batDau).toLocaleString('vi-VN'))}</description>`
+      + duong + pm + folderSv + '</Folder>';
+  }).join('');
+  const styles = [...mau.entries()].map(([id, hex]) =>
+    `<Style id="${id}"><IconStyle><color>${dsKmlMau(hex)}</color><scale>0.8</scale>`
+    + `<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle>`
+    + `<LabelStyle><scale>0</scale></LabelStyle></Style>`).join('')
+    + `<Style id="lineRoute"><LineStyle><color>8c556b5a</color><width>2</width></LineStyle></Style>`
+    + `<Style id="lineServing"><LineStyle><color>ffc06515</color><width>2</width></LineStyle></Style>`;
+  const ten = (DS_THANG[(dsGiaTri({rsrp:0, gen:'4G'}, tieuChi) || {}).thang] || {}).ten || tieuChi;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+<name>Ket qua do song MobiFone Hung Yen</name>
+<description>${dsXmlEsc('Tô màu theo: ' + ten)}</description>
+${styles}${than}
+</Document></kml>`;
+}
+function dsLogTenGoi(buoi){
+  return buoi.length === 1 ? buoi[0].ten
+    : `${buoi.length}-buoi-do-${dsTenBuoi(Date.now(), dsUserHienTai())}`;
+}
+function dsLogTaoFile(buoi){
+  const ten = dsLogTenGoi(buoi);
+  const xlsx = new Uint8Array(XLSX.write(dsLogWorkbook(buoi), {type:'array', bookType:'xlsx'}));
+  const kml = new TextEncoder().encode(dsKmlNoiDung(buoi, DS.hienThi));
+  const kmz = dsZipStore([{ten:'doc.kml', data:kml}]);
+  return [
+    {ten: ten + '.xlsx', mime:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data:xlsx},
+    {ten: ten + '.kmz', mime:'application/vnd.google-earth.kmz', data:kmz}
+  ];
+}
+function dsTaiVeFile(f){
+  const url = URL.createObjectURL(new Blob([f.data], {type:f.mime}));
+  const a = document.createElement('a');
+  a.href = url; a.download = f.ten; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function dsU8ToB64(u8){
+  let s = '';
+  const buoc = 0x8000;
+  for(let i = 0; i < u8.length; i += buoc) s += String.fromCharCode.apply(null, u8.subarray(i, i + buoc));
+  return btoa(s);
+}
+
+/* ---- Sự kiện tab "Kết quả đo" ---- */
+(function dsLogGanSuKien(){
+  const tickHet = document.getElementById('dsLogTickHet');
+  if(!tickHet) return;
+  tickHet.addEventListener('change', () => {
+    DSLOG.chon = tickHet.checked ? new Set(DSLOG.ds.map(b => b.id)) : new Set();
+    dsLogVeBang();
+  });
+  document.getElementById('dsLuuBuoi').addEventListener('click', async () => {
+    if(!DS.buoiId || !dsDiemCuaBuoi(DS.buoiId).length){
+      alert('Chưa có điểm đo nào trong buổi này.'); return;
+    }
+    const b = await dsLuuBuoi(true);
+    alert('Đã lưu buổi đo "' + b.ten + '" (' + b.soDiem + ' điểm) vào máy.\n'
+        + 'Vào tab "Đo sóng → Kết quả đo" để xuất Excel/KMZ hoặc đồng bộ lên Drive.');
+  });
+  document.getElementById('dsLogXuat').addEventListener('click', () => {
+    const buoi = dsLogDaChon();
+    if(!buoi.length){ dsLogBao('<div class="banner banner-warn">⚠ Chưa chọn buổi đo nào.</div>'); return; }
+    try {
+      dsLogTaoFile(buoi).forEach(dsTaiVeFile);
+      dsLogBao(`<div class="banner banner-ok">✅ Đã xuất <b>${buoi.length}</b> buổi đo ra 2 file: Excel tổng hợp và KMZ (mở bằng Google Earth).</div>`);
+    } catch(e){
+      dsLogBao('<div class="banner banner-err">❌ Lỗi khi xuất file: ' + escapeHtmlLite(e.message) + '</div>');
+    }
+  });
+  document.getElementById('dsLogXem').addEventListener('click', () => {
+    const buoi = dsLogDaChon();
+    if(!buoi.length){ dsLogBao('<div class="banner banner-warn">⚠ Chưa chọn buổi đo nào.</div>'); return; }
+    DS.diem.length = 0; DS.buoiId = null;
+    // Xem lại buổi route thì vẫn phải thấy lộ trình, dù lúc này không ở chế độ đo route
+    DS.veDuong = buoi.some(b => b.kieu === 'route');
+    buoi.forEach(b => b.diem.forEach(d => DS.diem.push(Object.assign({}, d))));
+    if(typeof cfGanServing === 'function') DS.diem.forEach(cfGanServing);
+    switchTab('field');
+    setTimeout(() => {
+      dsVeCham();
+      const co = DS.diem.filter(d => isValidLatLon(d.lat, d.lon)).map(d => [d.lat, d.lon]);
+      if(co.length) map.fitBounds(L.latLngBounds(co).pad(0.25));
+    }, 150);
+  });
+  document.getElementById('dsLogXoa').addEventListener('click', async () => {
+    const buoi = dsLogDaChon();
+    if(!buoi.length){ dsLogBao('<div class="banner banner-warn">⚠ Chưa chọn buổi đo nào.</div>'); return; }
+    if(!confirm('Xoá ' + buoi.length + ' buổi đo khỏi máy? Bản đã đồng bộ trên Drive vẫn còn.')) return;
+    for(const b of buoi){ await idbXoa('log:' + b.id); DSLOG.chon.delete(b.id); }
+    DSLOG.ds = DSLOG.ds.filter(b => !buoi.some(x => x.id === b.id));
+    dsLogVeBang();
+    dsLogBao(`<div class="banner banner-ok">✅ Đã xoá ${buoi.length} buổi đo khỏi máy.</div>`);
+  });
+  document.getElementById('dsLogDongBo').addEventListener('click', async () => {
+    const buoi = dsLogDaChon();
+    if(!buoi.length){ dsLogBao('<div class="banner banner-warn">⚠ Chưa chọn buổi đo nào.</div>'); return; }
+    if(!CONFIG.API_URL){
+      dsLogBao('<div class="banner banner-warn">⚠ Chưa nối backend nên chưa đẩy lên Drive được. Dữ liệu vẫn nằm an toàn trong máy — bấm "⬇ Xuất Excel + KMZ" để lấy file về.</div>');
+      return;
+    }
+    if(!CONFIG.auth || !CONFIG.auth.token){
+      dsLogBao('<div class="banner banner-warn">⚠ Cần đăng nhập để biết lưu vào thư mục của ai trên Drive.</div>');
+      return;
+    }
+    dsLogBao('<div class="small-note">⏳ Đang đẩy lên Google Drive…</div>');
+    let xong = 0; const loi = [];
+    for(const b of buoi){
+      try {
+        const files = dsLogTaoFile([b]).map(f => ({ten:f.ten, mime:f.mime, b64: dsU8ToB64(f.data)}));
+        const r = await pushToBackend('luu_log_do_song', {user: b.user, ten: b.ten, files});
+        if(r && r.ok){
+          b.daDongBo = true;
+          b.driveUrl = (r.files && r.files[0] && r.files[0].url) || '';
+          await idbLuu('log:' + b.id, b);
+          xong++;
+        } else loi.push(b.ten + ': ' + ((r && r.error) || 'không rõ lỗi'));
+      } catch(e){ loi.push(b.ten + ': ' + e.message); }
+    }
+    dsLogVeBang();
+    dsLogBao(`<div class="banner ${loi.length ? 'banner-warn' : 'banner-ok'}">`
+      + `${loi.length ? '⚠' : '✅'} Đã đồng bộ <b>${xong}/${buoi.length}</b> buổi đo lên Drive`
+      + ` (thư mục con mang tên tài khoản của người đo).`
+      + (loi.length ? '<br>Chưa đẩy được: ' + escapeHtmlLite(loi.join('; ')) : '') + '</div>');
+  });
+  dsLogNap();
 })();
 
 /** Đọc lại idle 1 lượt và vẽ lại khung. Speedtest KHÔNG chạy ở đây (nút 🔄 chỉ để
@@ -7735,7 +8131,7 @@ function switchTab(tab){
   document.getElementById('dosongWrap').style.display = tab==='dosong' ? 'flex' : 'none';
   document.getElementById('comingSoon').style.display = 'none';   // GĐ3a: FTTx đã có nội dung thật, không còn màn "sắp có"
   if(tab==='fttx') ensureFttxTab();
-  if(tab==='dosong' && typeof cfVeTomTat === 'function') cfVeTomTat();
+  if(tab==='dosong' && typeof cfVeTomTat === 'function'){ cfVeTomTat(); dsLogVeBang(); }
   if(tab==='field') setTimeout(()=>map.invalidateSize(), 60);
   if(tab==='home' && typeof ensureMbfHomeContent==='function') ensureMbfHomeContent();
   if(tab==='pakh') refreshPakhDashboard();

@@ -145,8 +145,6 @@
   .tool-btn-feedback:hover{background:#7CB342;}
 
   /* Nút "Sóng hiện tại" — chức năng chính khi dùng trên điện thoại, để nổi bật hơn các nút còn lại */
-  .tool-btn-signal{background:var(--mf-blue);border-color:var(--mf-blue-dark);color:#fff;font-weight:600;}
-  .tool-btn-signal:hover{background:var(--mf-blue-dark);}
 
   /* Bảng "Sóng hiện tại" */
   .sig-hero{border-radius:10px;padding:12px 14px;color:#fff;margin-bottom:10px;}
@@ -197,6 +195,36 @@
   .sig-off .ss{font-size:12.5px;color:var(--mf-muted);line-height:1.6;}
   .sig-off .btn{margin-top:10px;text-decoration:none;display:inline-block;}
   .sig-fresh{font-size:11px;color:var(--mf-muted);text-align:center;margin-top:8px;}
+
+  /* ---- Đo sóng nâng cao (GĐ9 đợt 1, 13/08/2026): chọn nội dung đo + kiểu đo ---- */
+  .ds-cfg{border:1px solid var(--mf-border);border-radius:8px;padding:8px 10px;margin-bottom:10px;background:var(--mf-bg);}
+  .ds-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:3px 0;}
+  .ds-row + .ds-row{border-top:1px dashed var(--mf-border);margin-top:3px;padding-top:6px;}
+  .ds-lb{font-size:11px;color:var(--mf-muted);text-transform:uppercase;letter-spacing:.03em;
+    flex:0 0 62px;font-weight:600;}
+  .ds-ck{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;user-select:none;}
+  .ds-ck input{width:16px;height:16px;cursor:pointer;margin:0;}
+  .ds-tt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;
+    background:#eef4ff;border:1px solid #cfe0ff;border-radius:8px;padding:7px 10px;margin-bottom:10px;}
+  .ds-tt b{color:var(--mf-blue-dark);}
+  .ds-cham{display:inline-block;width:9px;height:9px;border-radius:50%;background:#d92d2d;
+    animation:dsNhay 1.1s infinite;}
+  @keyframes dsNhay{0%,100%{opacity:1}50%{opacity:.25}}
+
+  /* Bảng chú giải + chọn kiểu tô màu, nổi ở góc trái dưới bản đồ */
+  #dsPanel{position:absolute;left:10px;bottom:70px;z-index:900;background:#fff;
+    border:1px solid var(--mf-border);border-radius:10px;box-shadow:0 3px 12px rgba(0,0,0,.18);
+    padding:8px 10px;font-size:12px;min-width:172px;max-width:210px;display:none;}
+  #dsPanel.hien{display:block;}
+  #dsPanel .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;
+    font-weight:700;color:var(--mf-blue-dark);font-size:12px;margin-bottom:6px;}
+  #dsPanel select{width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--mf-border);
+    border-radius:6px;margin-bottom:6px;}
+  #dsPanel .lg{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11.5px;line-height:1.35;}
+  #dsPanel .lg i{width:11px;height:11px;border-radius:50%;flex:0 0 11px;border:1px solid rgba(0,0,0,.25);}
+  #dsPanel .ft{display:flex;gap:6px;margin-top:7px;}
+  #dsPanel .ft button{flex:1;font-size:11.5px;padding:5px 6px;}
+  #dsPanel .sl{font-size:11px;color:var(--mf-muted);margin-top:4px;}
 
   /* Chú giải thang màu RSRP cho lớp "Điểm đo sóng đã nhập" */
   .drive-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;
@@ -585,18 +613,21 @@
         </div>
         <button class="tool-btn measure-tools-toggle" id="btnMeasureToolsToggle">🛠 Công cụ</button>
         <div class="measure-btns" id="measureBtns" style="display:none;">
-          <!-- "Sóng hiện tại" chuyển vào đây (trước là nút rời trong .map-tools) theo yêu cầu 06/08/2026 — gộp chung 1 chỗ với các công cụ đo đạc khác. Vẫn giữ style .tool-btn-signal (nền xanh) để nổi bật vì đây là công cụ chính khi đi hiện trường (xem SOP 3.8). -->
+          <!-- "Sóng hiện tại" chuyển vào đây (trước là nút rời trong .map-tools) theo yêu cầu 06/08/2026. -->
           <!-- GỘP 08/08/2026: trước đây có 2 mục đo sóng ("Sóng hiện tại" đọc tự động và "Đo sóng"
                nhập tay) khiến người dùng phải đoán bấm cái nào. Nay còn ĐÚNG 1 mục: bấm vào là đọc
                ngay số liệu thật nếu đã cài app, còn nhập tay thì vào bằng nút ngay trong khung đó. -->
-          <button class="tool-btn tool-btn-signal" id="btnLiveSignal" title="Đo sóng tại chỗ: Cell ID, băng tần, mức thu, chất lượng (đầy đủ khi đã cài app MobiFone Đo Sóng)">📶 Đo sóng</button>
+          <!-- Để màu trắng như các công cụ khác (yêu cầu 13/08/2026) — bỏ class .tool-btn-signal -->
+          <button class="tool-btn" id="btnLiveSignal" title="Đo sóng tại chỗ: Cell ID, băng tần, mức thu, chất lượng, tốc độ (đầy đủ khi đã cài app MobiFone Đo Sóng)">📶 Đo sóng</button>
           <button class="tool-btn" id="btnMeasureDist" title="Bấm các điểm trên bản đồ để đo khoảng cách đường chim bay">📏 Đo khoảng cách</button>
           <button class="tool-btn" id="btnMeasureRoute" title="Bấm điểm đầu và điểm cuối — tự động tính đường đi và quãng đường thực tế">🛣 Đo route</button>
           <button class="tool-btn" id="btnMeasureArea" title="Bấm các điểm để vẽ hình bao khu vực rồi tính diện tích">📐 Tính diện tích</button>
           <!-- Nút "Đo sóng (nhập tay)" cũ đã GỠ ở đây, chức năng vẫn còn nguyên: mở từ nút
                "✍ Nhập tay / ghim điểm đo" trong khung Đo sóng. Hàm setMeasureMode('signal') giữ nguyên. -->
           <button class="tool-btn" id="btnImportDrive" title="Nhập file log đo sóng xuất từ app G-NetTrack / Network Cell Info (TXT, CSV, KML) rồi vẽ lên bản đồ">📂 Nhập file đo sóng</button>
-          <button class="tool-btn" id="btnSpeedtest" title="Đo tốc độ mạng đang dùng, ngay trên bản đồ">🚀 Speedtest</button>
+          <!-- Nút "🚀 Speedtest" rời đã GỠ ở GĐ9 (13/08/2026): Speedtest nay là 1 tick chọn bên trong
+               mục "📶 Đo sóng" để không lặp lại 2 lối vào cho cùng một việc. Panel #speedtestPanel và
+               hàm runSpeedtest() vẫn giữ nguyên, chưa xoá, phòng khi cần bật lại. -->
           <button class="tool-btn" id="btnMeasureClearAll" title="Xoá toàn bộ kết quả đo đã chốt trên bản đồ">🗑 Xoá kết quả đo</button>
         </div>
         <div class="measure-panel" id="measurePanel" style="display:none;">
@@ -619,6 +650,26 @@
       </div>
 
       <div id="map"></div>
+      <!-- Bảng chú giải điểm đo (GĐ9 đợt 1): chọn tô màu theo tiêu chí nào + chú giải tương ứng.
+           Chỉ hiện khi đã có điểm đo, để không che bản đồ lúc chưa dùng tới. -->
+      <div id="dsPanel">
+        <div class="hd"><span>📍 Điểm đo sóng</span><button id="dsThuGon" class="btn btn-outline btn-sm" style="padding:1px 6px;font-size:11px;" title="Thu gọn / mở">–</button></div>
+        <div id="dsThan">
+          <select id="dsHienThi" title="Tô màu chấm theo tiêu chí nào">
+            <option value="muc_thu">Mức thu (RSRP / RSCP)</option>
+            <option value="chat_luong">Chất lượng (RSRQ / Ec-Io)</option>
+            <option value="dl">Tốc độ tải xuống</option>
+            <option value="ul">Tốc độ tải lên</option>
+            <option value="cellid">Cell ID</option>
+          </select>
+          <div id="dsLegend"></div>
+          <div class="sl" id="dsSoLieu"></div>
+          <div class="ft">
+            <button class="btn btn-outline btn-sm" id="dsXuatTam" title="Tải nhanh về máy dạng CSV">⬇ CSV</button>
+            <button class="btn btn-outline btn-sm" id="dsXoa" title="Xoá toàn bộ điểm đo trên bản đồ">🗑 Xoá</button>
+          </div>
+        </div>
+      </div>
       <div id="routeEditBar">
         <span class="title">✏️ Đang sửa tuyến: <span id="reName"></span></span>
         <button class="btn btn-purple btn-sm" id="btnSaveRoute">💾 Lưu đề xuất</button>
@@ -1262,14 +1313,29 @@
   <div class="modal-box" style="max-width:520px;">
     <div class="modal-head"><h4>📶 Đo sóng</h4><button id="closeLiveSig">✕</button></div>
     <div class="modal-body">
+      <!-- Chọn NỘI DUNG đo (idle / speedtest, được cả 2) và KIỂU đo (1 điểm / theo route).
+           Gộp Speedtest vào đây theo yêu cầu 13/08/2026 để chỉ còn 1 chỗ đo sóng duy nhất. -->
+      <div class="ds-cfg" id="dsCfg">
+        <div class="ds-row">
+          <span class="ds-lb">Nội dung</span>
+          <label class="ds-ck" title="Mức thu, chất lượng, Cell ID, băng tần — cần app MobiFone Đo Sóng"><input type="checkbox" id="dsIdle" checked> Đo idle</label>
+          <label class="ds-ck" title="Tốc độ tải xuống / tải lên / độ trễ — chạy được cả trên trình duyệt"><input type="checkbox" id="dsSpeed"> Speedtest</label>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lb">Kiểu đo</span>
+          <label class="ds-ck"><input type="radio" name="dsKieu" id="dsDiem" checked> Đo điểm</label>
+          <label class="ds-ck" title="Đo liên tục khi di chuyển, tới khi bấm Dừng"><input type="radio" name="dsKieu" id="dsRoute"> Đo route</label>
+        </div>
+      </div>
+      <div id="dsTrangThai"></div>
       <div id="liveSigBody"></div>
       <!-- Ghim đáy: trên màn hình điện thoại bảng thông số khá dài, nút thao tác phải luôn với tới được
            mà không phải cuộn xuống cuối. -->
       <div class="sig-actions">
-        <!-- Đây cũng là lối vào duy nhất của chế độ NHẬP TAY sau khi gộp 2 mục đo sóng (08/08/2026),
-             nên nhãn phải nói rõ cả 2 việc, không chỉ "ghim". -->
-        <button class="btn btn-primary" id="btnLiveSigPin" style="flex:1;min-width:170px;">✍ Ghim điểm đo / nhập tay</button>
-        <button class="btn btn-outline" id="btnLiveSigRefresh">🔄 Đo lại</button>
+        <button class="btn btn-primary" id="btnDsChay" style="flex:1;min-width:150px;">▶ Bắt đầu đo</button>
+        <!-- Đây cũng là lối vào duy nhất của chế độ NHẬP TAY sau khi gộp 2 mục đo sóng (08/08/2026). -->
+        <button class="btn btn-outline" id="btnLiveSigPin">✍ Ghim / nhập tay</button>
+        <button class="btn btn-outline" id="btnLiveSigRefresh" title="Đọc lại thông số ngay">🔄</button>
       </div>
     </div>
   </div>
@@ -3474,23 +3540,428 @@ function rsrpPercent(rsrp){
   return Math.max(0, Math.min(100, Math.round((rsrp + 120) / 50 * 100)));   // −120 dBm = 0%, −70 dBm = 100%
 }
 
+/* ============================================================================
+   ĐO SÓNG NÂNG CAO — GĐ9 đợt 1 (13/08/2026)
+
+   Gộp Speedtest vào chung mục "Đo sóng" và bổ sung chế độ đo theo route, kết quả
+   chấm màu thẳng lên bản đồ kiểu máy TEMS.
+
+     • Nội dung đo: "Đo idle" (mức thu / chất lượng / Cell ID — cần app Android)
+       và "Speedtest" (tốc độ tải xuống, tải lên, độ trễ — chạy được cả trên trình duyệt).
+       Tick 1 hoặc cả 2; tick cả 2 thì hiện đồng thời trong 1 khuôn hình gọn.
+     • Kiểu đo: "Đo điểm" (1 lần) hoặc "Đo route" (đo liên tục khi di chuyển tới khi bấm Dừng).
+       Idle lấy mỗi 3 giây theo nhịp modem Android; Speedtest chỉ chạy mỗi 30 GIÂY
+       vì mỗi lượt đo tốn 5–20 MB data — chạy dày hơn thì vừa tốn tiền vừa làm nóng máy.
+     • Chấm màu tô theo 1 trong 5 tiêu chí, đổi bằng ô chọn ở bảng góc trái dưới bản đồ.
+
+   Ngưỡng màu lấy đúng theo yêu cầu ngày 13/08/2026, khai báo 1 chỗ trong DS_THANG để
+   chú giải và màu chấm không bao giờ lệch nhau.
+   ============================================================================ */
+const DS_MAU = {dam:'#1a7f3c', la:'#7cb342', vang:'#f5c518', cam:'#ef8b2c', do:'#d92d2d',
+                duong:'#1565c0', xam:'#9aa4b2'};
+/* Mỗi bậc: {tu: ngưỡng dưới (>=), nhan: chữ trong chú giải, mau}. Xếp từ cao xuống thấp. */
+const DS_THANG = {
+  rsrp: {ten:'Mức thu 4G/5G — RSRP (dBm)', bac:[
+    {tu:-80,  nhan:'≥ −80 · Rất tốt',       mau:DS_MAU.dam},
+    {tu:-90,  nhan:'−90…−80 · Tốt',         mau:DS_MAU.la},
+    {tu:-100, nhan:'−100…−90 · Trung bình', mau:DS_MAU.vang},
+    {tu:-Infinity, nhan:'< −100 · Yếu',     mau:DS_MAU.do}]},
+  rscp: {ten:'Mức thu 3G — RSCP (dBm)', bac:[
+    {tu:-75,  nhan:'≥ −75 · Rất tốt',       mau:DS_MAU.dam},
+    {tu:-85,  nhan:'−85…−75 · Tốt',         mau:DS_MAU.la},
+    {tu:-95,  nhan:'−95…−85 · Trung bình',  mau:DS_MAU.vang},
+    {tu:-Infinity, nhan:'< −95 · Yếu',      mau:DS_MAU.do}]},
+  rsrq: {ten:'Chất lượng 4G/5G — RSRQ (dB)', bac:[
+    {tu:-6,   nhan:'≥ −6 · Rất tốt',        mau:DS_MAU.dam},
+    {tu:-10,  nhan:'−10…−6 · Tốt',          mau:DS_MAU.la},
+    {tu:-14,  nhan:'−14…−10 · Trung bình',  mau:DS_MAU.vang},
+    {tu:-Infinity, nhan:'< −14 · Nhiễu cao', mau:DS_MAU.do}]},
+  ecio: {ten:'Chất lượng 3G — Ec/Io (dB)', bac:[
+    {tu:-4,   nhan:'≥ −4 · Rất tốt',        mau:DS_MAU.dam},
+    {tu:-6,   nhan:'−6…−4 · Tốt',           mau:DS_MAU.la},
+    {tu:-10,  nhan:'−10…−6 · Trung bình',   mau:DS_MAU.vang},
+    {tu:-Infinity, nhan:'< −10 · Kém',      mau:DS_MAU.do}]},
+  dl5g: {ten:'Tốc độ tải xuống 5G (Mbps)', bac:[
+    {tu:300, nhan:'≥ 300',      mau:DS_MAU.duong},
+    {tu:100, nhan:'100 – 300',  mau:DS_MAU.la},
+    {tu:50,  nhan:'50 – 100',   mau:DS_MAU.vang},
+    {tu:10,  nhan:'10 – 50',    mau:DS_MAU.cam},
+    {tu:-Infinity, nhan:'0 – 10', mau:DS_MAU.do}]},
+  ul5g: {ten:'Tốc độ tải lên 5G (Mbps)', bac:[
+    {tu:75, nhan:'≥ 75',    mau:DS_MAU.duong},
+    {tu:30, nhan:'30 – 75', mau:DS_MAU.la},
+    {tu:10, nhan:'10 – 30', mau:DS_MAU.vang},
+    {tu:2,  nhan:'2 – 10',  mau:DS_MAU.cam},
+    {tu:-Infinity, nhan:'0 – 2', mau:DS_MAU.do}]},
+  dl4g: {ten:'Tốc độ tải xuống 4G (Mbps)', bac:[
+    {tu:70, nhan:'≥ 70',    mau:DS_MAU.duong},
+    {tu:30, nhan:'30 – 70', mau:DS_MAU.la},
+    {tu:10, nhan:'10 – 30', mau:DS_MAU.vang},
+    {tu:1,  nhan:'1 – 10',  mau:DS_MAU.cam},
+    {tu:-Infinity, nhan:'0 – 1', mau:DS_MAU.do}]},
+  /* ⚠ Bậc "Cam" của 4G UL bị bỏ trống trong yêu cầu gốc (giữa 500 kbps và 2 Mbps).
+     Điền 0,5 – 2 Mbps cho liền mạch, không để lỗ hổng làm chấm mất màu. */
+  ul4g: {ten:'Tốc độ tải lên 4G (Mbps)', bac:[
+    {tu:25,  nhan:'≥ 25',        mau:DS_MAU.duong},
+    {tu:10,  nhan:'10 – 25',     mau:DS_MAU.la},
+    {tu:2,   nhan:'2 – 10',      mau:DS_MAU.vang},
+    {tu:0.5, nhan:'0,5 – 2',     mau:DS_MAU.cam},
+    {tu:-Infinity, nhan:'< 0,5', mau:DS_MAU.do}]}
+};
+const DS_SPEED_MOI = 30000;   // nhịp speedtest khi chạy route (chốt 13/08/2026)
+const DS_IDLE_MOI  = 3000;    // nhịp đọc idle — bằng đúng chu kỳ modem Android cho phép
+
+const DS = {
+  diem: [],            // {t, lat, lon, gen, cellId, rsrp, rsrq, rscp, ecio, sinr, dl, ul, ping}
+  dangChay: false,
+  cheDo: 'diem',       // 'diem' | 'route'
+  hienThi: 'muc_thu',
+  tIdle: null, tSpeed: null, watchId: null, viTri: null,
+  spDangChay: false, batDau: null
+};
+const dsLayer = L.layerGroup();
+let dsDuong = null;      // đường nối các điểm khi đo route
+
+function dsLa3G(g){ const s = String(g || '').toUpperCase(); return s.indexOf('3G') >= 0 || s.indexOf('WCDMA') >= 0 || s.indexOf('UMTS') >= 0; }
+function dsLa5G(g){ return String(g || '').toUpperCase().indexOf('5G') >= 0; }
+
+/** Chọn thang đo + lấy giá trị tương ứng cho 1 điểm, theo tiêu chí đang hiển thị.
+    Trả null nếu điểm không có số liệu cho tiêu chí đó (khi đó không vẽ chấm). */
+function dsGiaTri(d, cheDo){
+  const co = v => (v !== null && v !== undefined && v !== '' && isFinite(v));
+  if(cheDo === 'muc_thu')   return dsLa3G(d.gen) ? (co(d.rscp) ? {v:+d.rscp, thang:'rscp'} : null)
+                                                 : (co(d.rsrp) ? {v:+d.rsrp, thang:'rsrp'} : null);
+  if(cheDo === 'chat_luong')return dsLa3G(d.gen) ? (co(d.ecio) ? {v:+d.ecio, thang:'ecio'} : null)
+                                                 : (co(d.rsrq) ? {v:+d.rsrq, thang:'rsrq'} : null);
+  if(cheDo === 'dl')        return co(d.dl) ? {v:+d.dl, thang: dsLa5G(d.gen) ? 'dl5g' : 'dl4g'} : null;
+  if(cheDo === 'ul')        return co(d.ul) ? {v:+d.ul, thang: dsLa5G(d.gen) ? 'ul5g' : 'ul4g'} : null;
+  if(cheDo === 'cellid')    return (d.cellId !== null && d.cellId !== undefined && d.cellId !== '')
+                                   ? {v:d.cellId, thang:'cellid'} : null;
+  return null;
+}
+function dsMauTheoThang(khoaThang, v){
+  const t = DS_THANG[khoaThang]; if(!t) return DS_MAU.xam;
+  for(const b of t.bac){ if(v >= b.tu) return b.mau; }
+  return DS_MAU.xam;
+}
+/** Mỗi Cell ID một màu, sinh từ băm tên nên MÀU CỐ ĐỊNH giữa các lần mở — nếu dùng
+    Math.random() thì mở lại trang màu đổi hết, không đối chiếu được với lần đo trước. */
+function dsMauCellId(id){
+  const s = String(id); let h = 0;
+  for(let i = 0; i < s.length; i++) h = (h * 131 + s.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360}, 70%, ${38 + (h >> 9) % 18}%)`;
+}
+function dsMauDiem(d){
+  const g = dsGiaTri(d, DS.hienThi);
+  if(!g) return null;
+  return g.thang === 'cellid' ? dsMauCellId(g.v) : dsMauTheoThang(g.thang, g.v);
+}
+
+function dsSo(v, n){ return (v === null || v === undefined || !isFinite(v)) ? '—' : (+v).toFixed(n == null ? 1 : n); }
+function dsPopup(d){
+  const h = [];
+  h.push(`<b style="color:var(--mf-blue-dark);">Điểm đo ${new Date(d.t).toLocaleTimeString('vi-VN')}</b>`);
+  if(d.gen) h.push('Công nghệ: <b>' + d.gen + '</b>');
+  if(d.cellId != null) h.push('Cell ID: <b>' + d.cellId + '</b>' + (d.pci != null ? ' · PCI ' + d.pci : ''));
+  if(d.rsrp != null) h.push('RSRP: <b>' + dsSo(d.rsrp) + ' dBm</b>');
+  if(d.rscp != null) h.push('RSCP: <b>' + dsSo(d.rscp) + ' dBm</b>');
+  if(d.rsrq != null) h.push('RSRQ: <b>' + dsSo(d.rsrq) + ' dB</b>');
+  if(d.ecio != null) h.push('Ec/Io: <b>' + dsSo(d.ecio) + ' dB</b>');
+  if(d.sinr != null) h.push('SINR: <b>' + dsSo(d.sinr) + ' dB</b>');
+  if(d.dl != null) h.push('Tải xuống: <b>' + dsSo(d.dl) + ' Mbps</b>');
+  if(d.ul != null) h.push('Tải lên: <b>' + dsSo(d.ul) + ' Mbps</b>');
+  if(d.ping != null) h.push('Ping: <b>' + dsSo(d.ping, 0) + ' ms</b>');
+  return '<div style="min-width:170px;font-size:12.5px;line-height:1.6;">' + h.join('<br>') + '</div>';
+}
+
+/** Vẽ lại toàn bộ chấm theo tiêu chí đang chọn. Số điểm 1 buổi đo thường vài trăm nên
+    vẽ lại cả lớp là đủ nhanh, không cần cập nhật từng chấm cho phức tạp. */
+function dsVeCham(){
+  dsLayer.clearLayers();
+  let hien = 0;
+  DS.diem.forEach(d => {
+    if(!isValidLatLon(d.lat, d.lon)) return;
+    const mau = dsMauDiem(d);
+    if(!mau) return;                       // thiếu số liệu cho tiêu chí này -> không vẽ, khỏi gây hiểu nhầm
+    hien++;
+    L.circleMarker([d.lat, d.lon], {radius:5.5, color:'#ffffff', weight:1.2,
+      fillColor:mau, fillOpacity:0.95}).bindPopup(dsPopup(d)).addTo(dsLayer);
+  });
+  // Đường nối thể hiện lộ trình đã đi (chỉ có ý nghĩa ở chế độ route)
+  if(dsDuong){ map.removeLayer(dsDuong); dsDuong = null; }
+  const toado = DS.diem.filter(d => isValidLatLon(d.lat, d.lon)).map(d => [d.lat, d.lon]);
+  if(DS.cheDo === 'route' && toado.length > 1){
+    dsDuong = L.polyline(toado, {color:'#5a6b85', weight:2, opacity:.55, dashArray:'4,4'});
+    dsLayer.addLayer(dsDuong);
+  }
+  if(!map.hasLayer(dsLayer) && DS.diem.length) map.addLayer(dsLayer);
+  dsVeLegend(hien);
+}
+function dsVeLegend(soHien){
+  const panel = document.getElementById('dsPanel');
+  if(!panel) return;
+  panel.classList.toggle('hien', DS.diem.length > 0);
+  const box = document.getElementById('dsLegend');
+  if(DS.hienThi === 'cellid'){
+    const ds = [...new Set(DS.diem.map(d => d.cellId).filter(v => v !== null && v !== undefined && v !== ''))];
+    box.innerHTML = ds.slice(0, 8).map(id =>
+      `<div class="lg"><i style="background:${dsMauCellId(id)}"></i>${escapeHtmlLite(String(id))}</div>`).join('')
+      + (ds.length > 8 ? `<div class="lg" style="color:var(--mf-muted);">… và ${ds.length - 8} cell khác</div>` : '')
+      || '<div class="lg" style="color:var(--mf-muted);">Chưa có Cell ID nào</div>';
+  } else {
+    // Gộp thang 3G và 4G/5G lại cho người dùng thấy đủ, vì 1 buổi đo có thể lẫn cả hai
+    const khoa = DS.hienThi === 'muc_thu' ? ['rsrp','rscp']
+               : DS.hienThi === 'chat_luong' ? ['rsrq','ecio']
+               : DS.hienThi === 'dl' ? ['dl4g','dl5g'] : ['ul4g','ul5g'];
+    box.innerHTML = khoa.map(k => {
+      const t = DS_THANG[k];
+      return `<div class="lg" style="font-weight:700;color:var(--mf-blue-dark);margin-top:4px;">${t.ten}</div>`
+        + t.bac.map(b => `<div class="lg"><i style="background:${b.mau}"></i>${b.nhan}</div>`).join('');
+    }).join('');
+  }
+  document.getElementById('dsSoLieu').textContent =
+    `Đang hiện ${soHien}/${DS.diem.length} điểm` + (soHien < DS.diem.length ? ' (còn lại thiếu số liệu của tiêu chí này)' : '');
+}
+
+/* ---- Đo 1 lượt speedtest, KHÔNG đụng giao diện — dùng chung cho cả đo điểm lẫn đo route ---- */
+async function dsDoTocDo(){
+  const latency = await measureLatency(3);
+  const DOWN_BYTES = 15 * 1000 * 1000;
+  const t0 = performance.now();
+  const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${DOWN_BYTES}&cachebust=${Date.now()}`, {cache:'no-store'});
+  if(!res.ok || !res.body) throw new Error('HTTP ' + res.status);
+  const reader = res.body.getReader();
+  let nhan = 0;
+  while(true){ const {done, value} = await reader.read(); if(done) break; nhan += value.length; }
+  const giay = (performance.now() - t0) / 1000;
+  const dl = (nhan * 8 / 1e6) / giay;
+  const ul = await measureUpload(6 * 1000 * 1000);
+  return {dl, ul, ping: latency ? latency.median : null};
+}
+function dsDocIdle(){
+  return mbfNative.available() ? mbfNative.read() : Promise.resolve(null);
+}
+/** Chuẩn hoá số liệu app trả về thành 1 bản ghi điểm đo. */
+function dsTuIdle(d, pos){
+  const so = v => (v === null || v === undefined || v === '' || !isFinite(v)) ? null : +v;
+  const gen = (d && d.congNghe) || null;
+  return {
+    t: Date.now(), lat: pos ? pos.lat : null, lon: pos ? pos.lon : null,
+    gen, cellId: (d && d.cellId != null) ? d.cellId : null, pci: (d && d.pci != null) ? d.pci : null,
+    rsrp: dsLa3G(gen) ? null : so(d && d.rsrp),
+    rscp: dsLa3G(gen) ? so(d && (d.rscp != null ? d.rscp : d.rsrp)) : null,
+    rsrq: dsLa3G(gen) ? null : so(d && d.rsrq),
+    ecio: dsLa3G(gen) ? so(d && (d.ecio != null ? d.ecio : d.rsrq)) : null,
+    sinr: so(d && d.sinr), dl: null, ul: null, ping: null
+  };
+}
+function dsThemDiem(rec){
+  DS.diem.push(rec);
+  dsVeCham();
+  return rec;
+}
+
+/* ---- Trạng thái + nút bấm ---- */
+function dsCapNhatNut(){
+  const nut = document.getElementById('btnDsChay');
+  if(!nut) return;
+  if(DS.dangChay){ nut.textContent = '■ Dừng đo'; nut.classList.add('btn-danger'); }
+  else { nut.textContent = DS.cheDo === 'route' ? '▶ Bắt đầu đo route' : '▶ Đo tại điểm này';
+         nut.classList.remove('btn-danger'); }
+}
+function dsVeTrangThai(chuThem){
+  const el = document.getElementById('dsTrangThai');
+  if(!el) return;
+  if(!DS.dangChay && !chuThem){ el.innerHTML = ''; return; }
+  const giay = DS.batDau ? Math.round((Date.now() - DS.batDau) / 1000) : 0;
+  const phut = Math.floor(giay / 60), du = giay % 60;
+  el.innerHTML = `<div class="ds-tt">${DS.dangChay ? '<span class="ds-cham"></span>' : ''}
+    <span>${DS.dangChay ? 'Đang đo route' : 'Đã dừng'} · <b>${DS.diem.length}</b> điểm${DS.batDau ? ` · ${phut}:${String(du).padStart(2,'0')}` : ''}</span>
+    ${chuThem ? '<span style="color:var(--mf-muted);">' + chuThem + '</span>' : ''}</div>`;
+}
+
+/* ---- Đo 1 điểm ---- */
+async function dsDoMotDiem(){
+  const body = document.getElementById('liveSigBody');
+  const lamIdle = document.getElementById('dsIdle').checked;
+  const lamSpeed = document.getElementById('dsSpeed').checked;
+  if(!lamIdle && !lamSpeed){
+    body.innerHTML = '<div class="banner banner-warn" style="margin:0;">Chọn ít nhất 1 nội dung đo (Đo idle hoặc Speedtest).</div>';
+    return;
+  }
+  body.innerHTML = '<div class="small-note">⏳ Đang đo…</div>';
+  const pos = await getPositionOnce();
+  liveSigPos = pos || liveSigPos;
+  const data = lamIdle ? await dsDocIdle() : null;
+  liveSigLast = data;
+  let sp = null;
+  if(lamSpeed){
+    dsVeKetQua(data, null, 'Đang đo tốc độ…');
+    try { sp = await dsDoTocDo(); } catch(e){ sp = {loi: true}; }
+  }
+  dsVeKetQua(data, sp);
+  // Ghi thành 1 điểm trên bản đồ nếu có toạ độ
+  if(liveSigPos){
+    const rec = dsTuIdle(data && data.ok ? data : null, liveSigPos);
+    if(sp && !sp.loi){ rec.dl = sp.dl; rec.ul = sp.ul; rec.ping = sp.ping; }
+    if(rec.gen || rec.dl != null) dsThemDiem(rec);
+  }
+}
+
+/* ---- Đo route ---- */
+function dsBatDauRoute(){
+  const lamIdle = document.getElementById('dsIdle').checked;
+  const lamSpeed = document.getElementById('dsSpeed').checked;
+  if(!lamIdle && !lamSpeed){
+    document.getElementById('liveSigBody').innerHTML =
+      '<div class="banner banner-warn" style="margin:0;">Chọn ít nhất 1 nội dung đo.</div>';
+    return;
+  }
+  DS.dangChay = true; DS.batDau = Date.now();
+  clearInterval(liveSigTimer); liveSigTimer = null;   // nhịp theo dõi live nhường chỗ cho nhịp ghi route
+  dsCapNhatNut(); dsVeTrangThai();
+  // Bám vị trí liên tục — đo route mà dùng getCurrentPosition thì toạ độ bị cũ, chấm dồn đống
+  if(navigator.geolocation){
+    DS.watchId = navigator.geolocation.watchPosition(
+      p => { DS.viTri = {lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+             liveSigPos = DS.viTri; },
+      () => {}, {enableHighAccuracy:true, maximumAge:2000, timeout:15000});
+  }
+  if(lamIdle){
+    const doIdle = async () => {
+      const d = await dsDocIdle();
+      liveSigLast = d;
+      if(DS.viTri && d && d.ok) dsThemDiem(dsTuIdle(d, DS.viTri));
+      dsVeKetQua(d, null);
+      dsVeTrangThai();
+    };
+    doIdle();
+    DS.tIdle = setInterval(doIdle, DS_IDLE_MOI);
+  }
+  if(lamSpeed){
+    const doSpeed = async () => {
+      if(DS.spDangChay) return;             // lượt trước chưa xong thì bỏ qua, tránh chồng chéo
+      DS.spDangChay = true;
+      try {
+        const sp = await dsDoTocDo();
+        if(DS.viTri){
+          const rec = dsTuIdle(liveSigLast && liveSigLast.ok ? liveSigLast : null, DS.viTri);
+          rec.dl = sp.dl; rec.ul = sp.ul; rec.ping = sp.ping;
+          dsThemDiem(rec);
+        }
+        dsVeKetQua(liveSigLast, sp);
+      } catch(e){ /* mất mạng giữa chừng là chuyện thường khi đo vùng lõm — bỏ qua lượt này */ }
+      DS.spDangChay = false;
+      dsVeTrangThai();
+    };
+    doSpeed();
+    DS.tSpeed = setInterval(doSpeed, DS_SPEED_MOI);
+  }
+}
+function dsDungRoute(){
+  DS.dangChay = false;
+  clearInterval(DS.tIdle); DS.tIdle = null;
+  clearInterval(DS.tSpeed); DS.tSpeed = null;
+  if(DS.watchId != null && navigator.geolocation){ navigator.geolocation.clearWatch(DS.watchId); DS.watchId = null; }
+  dsCapNhatNut();
+  dsVeTrangThai('Đã ghi ' + DS.diem.length + ' điểm lên bản đồ.');
+  dsVeCham();
+}
+
+/* ---- Hiển thị kết quả trong khung (gọn, hiện đồng thời cả 2 nội dung nếu tick cả 2) ---- */
+function dsHtmlTocDo(sp, dangDo){
+  if(dangDo) return `<div class="sig-sec">Tốc độ</div><div class="small-note">⏳ ${dangDo}</div>`;
+  if(!sp) return '';
+  if(sp.loi) return `<div class="sig-sec">Tốc độ</div><div class="banner banner-warn" style="margin:0;">⚠ Không đo được tốc độ (mất kết nối hoặc máy chủ đo không phản hồi).</div>`;
+  const o = (k, v, dv) => `<div class="sig-cell"><div class="k">${k}</div><div class="v">${v}${dv}</div></div>`;
+  return `<div class="sig-sec">Tốc độ</div>
+    <div class="sig-grid">
+      ${o('Tải xuống', dsSo(sp.dl), ' Mbps')}
+      ${o('Tải lên',   dsSo(sp.ul), ' Mbps')}
+      ${o('Ping',      dsSo(sp.ping, 0), ' ms')}
+    </div>`;
+}
+function dsVeKetQua(data, sp, dangDoTocDo){
+  const body = document.getElementById('liveSigBody');
+  if(!body) return;
+  const lamIdle = document.getElementById('dsIdle').checked;
+  const lamSpeed = document.getElementById('dsSpeed').checked;
+  let html = '';
+  if(lamIdle) html += (data && data.ok) ? renderLiveSignalNative(data, liveSigPos)
+                                        : renderLiveSignalBrowser(data, liveSigPos);
+  if(lamSpeed) html += dsHtmlTocDo(sp, dangDoTocDo);
+  // Chỉ chạy speedtest: vẫn cần biết đang đứng ở đâu
+  if(!lamIdle && lamSpeed) html += posBlockHtml(liveSigPos);
+  body.innerHTML = html;
+  const pin = document.getElementById('btnLiveSigPin');
+  if(pin){
+    pin.disabled = !liveSigPos;
+    pin.style.opacity = liveSigPos ? 1 : .5;
+    pin.title = liveSigPos ? '' : 'Cần bật định vị để biết ghim điểm đo vào chỗ nào';
+  }
+}
+
+/* ---- Xuất nhanh CSV (bản đầy đủ lên Google Drive để ở đợt 3) ---- */
+function dsXuatCsv(){
+  if(!DS.diem.length){ alert('Chưa có điểm đo nào.'); return; }
+  let out = 'Thoi gian,Lat,Long,Cong nghe,Cell ID,PCI,RSRP (dBm),RSCP (dBm),RSRQ (dB),Ec/Io (dB),SINR (dB),Tai xuong (Mbps),Tai len (Mbps),Ping (ms)\n';
+  out += DS.diem.map(d => [new Date(d.t).toLocaleString('vi-VN'), d.lat, d.lon, d.gen, d.cellId, d.pci,
+    d.rsrp, d.rscp, d.rsrq, d.ecio, d.sinr, d.dl, d.ul, d.ping].map(csvCell).join(',')).join('\n');
+  downloadCsv('Diem_do_song_' + isoDate(new Date()) + '.csv', out);
+}
+
 let liveSigTimer = null, liveSigLast = null, liveSigPos = null;
 
 function openLiveSignal(){
   document.getElementById('liveSigModal').classList.add('open');
   setMeasureListOpen(false);
-  refreshLiveSignal();
-  // Trong app thì tự làm mới liên tục; modem Android bị giới hạn ~2 giây/lần nên đặt 3 giây.
-  clearInterval(liveSigTimer);
-  if(mbfNative.available()) liveSigTimer = setInterval(refreshLiveSignal, 3000);
+  dsCapNhatNut(); dsVeTrangThai();
+  // Mở khung ở chế độ Đo điểm thì đo luôn 1 lượt cho người dùng thấy ngay, giữ đúng thói quen cũ,
+  // và trong app thì tự làm mới liên tục để dùng như màn hình theo dõi sóng (KHÔNG ghi điểm —
+  // muốn ghi lên bản đồ thì bấm nút đo). Modem Android giới hạn ~2 giây/lần nên đặt 3 giây.
+  clearInterval(liveSigTimer); liveSigTimer = null;
+  if(!DS.dangChay && DS.cheDo === 'diem'){
+    refreshLiveSignal();
+    if(mbfNative.available()) liveSigTimer = setInterval(refreshLiveSignal, DS_IDLE_MOI);
+  }
 }
 function closeLiveSignal(){
+  // Cố ý KHÔNG dừng route khi đóng khung: cán bộ hay tắt khung để nhìn bản đồ trong lúc đang chạy route.
   clearInterval(liveSigTimer); liveSigTimer = null;
   document.getElementById('liveSigModal').classList.remove('open');
 }
 document.getElementById('btnLiveSignal').addEventListener('click', openLiveSignal);
 document.getElementById('closeLiveSig').onclick = closeLiveSignal;
 document.getElementById('btnLiveSigRefresh').onclick = refreshLiveSignal;
+document.getElementById('btnDsChay').addEventListener('click', () => {
+  if(DS.dangChay) return dsDungRoute();
+  if(DS.cheDo === 'route') return dsBatDauRoute();
+  dsDoMotDiem();
+});
+['dsDiem','dsRoute'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+  DS.cheDo = document.getElementById('dsRoute').checked ? 'route' : 'diem';
+  clearInterval(liveSigTimer); liveSigTimer = null;
+  if(DS.cheDo === 'diem' && !DS.dangChay && mbfNative.available())
+    liveSigTimer = setInterval(refreshLiveSignal, DS_IDLE_MOI);
+  dsCapNhatNut(); dsVeCham();
+}));
+['dsIdle','dsSpeed'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+  if(!DS.dangChay) dsVeKetQua(liveSigLast, null);
+}));
+document.getElementById('dsHienThi').addEventListener('change', e => { DS.hienThi = e.target.value; dsVeCham(); });
+document.getElementById('dsXuatTam').addEventListener('click', dsXuatCsv);
+document.getElementById('dsXoa').addEventListener('click', () => {
+  if(!DS.diem.length) return;
+  if(!confirm('Xoá toàn bộ ' + DS.diem.length + ' điểm đo khỏi bản đồ?')) return;
+  DS.diem.length = 0; dsVeCham();
+  document.getElementById('dsPanel').classList.remove('hien');
+});
+document.getElementById('dsThuGon').addEventListener('click', () => {
+  const than = document.getElementById('dsThan');
+  const an = than.style.display === 'none';
+  than.style.display = an ? 'block' : 'none';
+  document.getElementById('dsThuGon').textContent = an ? '–' : '+';
+});
 
 /** Lấy vị trí GPS (dùng cho cả 2 chế độ) — không chặn việc hiện số liệu vô tuyến. */
 function getPositionOnce(){
@@ -3504,6 +3975,8 @@ function getPositionOnce(){
   });
 }
 
+/** Đọc lại idle 1 lượt và vẽ lại khung. Speedtest KHÔNG chạy ở đây (nút 🔄 chỉ để
+    làm tươi thông số sóng), muốn đo tốc độ thì bấm nút đo chính cho rõ ràng. */
 async function refreshLiveSignal(){
   const body = document.getElementById('liveSigBody');
   if(!liveSigLast) body.innerHTML = '<div class="small-note">⏳ Đang đọc thông số sóng…</div>';
@@ -3513,11 +3986,7 @@ async function refreshLiveSignal(){
   ]);
   liveSigPos = pos || liveSigPos;
   liveSigLast = data;
-  body.innerHTML = data && data.ok ? renderLiveSignalNative(data, liveSigPos) : renderLiveSignalBrowser(data, liveSigPos);
-  const pin = document.getElementById('btnLiveSigPin');
-  pin.disabled = !liveSigPos;
-  pin.style.opacity = liveSigPos ? 1 : .5;
-  pin.title = liveSigPos ? '' : 'Cần bật định vị để biết ghim điểm đo vào chỗ nào';
+  dsVeKetQua(data, null);
 }
 
 function posBlockHtml(pos){
@@ -4106,8 +4575,11 @@ function clearDrivePoints(){
 document.getElementById('btnDriveClear').addEventListener('click', clearDrivePoints);
 document.getElementById('btnDriveClear2').addEventListener('click', clearDrivePoints);
 
-/* ---- Speedtest: đo tốc độ tải xuống ngay trên bản đồ (không chuyển trang, không cần API key) ---- */
-document.getElementById('btnSpeedtest').addEventListener('click', () => {
+/* ---- Speedtest: đo tốc độ tải xuống ngay trên bản đồ (không chuyển trang, không cần API key) ----
+   Từ GĐ9 (13/08/2026) lối vào chính là tick "Speedtest" trong khung Đo sóng; panel rời này giữ lại
+   nhưng không còn nút mở, nên phải bọc addEventListener trong kiểm tra tồn tại. */
+const _btnSt = document.getElementById('btnSpeedtest');
+if(_btnSt) _btnSt.addEventListener('click', () => {
   stopMeasureMode();
   const panel = document.getElementById('speedtestPanel');
   const opening = panel.style.display !== 'block';

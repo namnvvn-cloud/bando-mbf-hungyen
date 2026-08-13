@@ -226,6 +226,16 @@
   #dsPanel .ft button{flex:1;font-size:11.5px;padding:5px 6px;}
   #dsPanel .sl{font-size:11px;color:var(--mf-muted);margin-top:4px;}
 
+  /* ---- Cánh sóng cell file (GĐ9 đợt 2, 13/08/2026) ---- */
+  #cfPanel{position:absolute;right:10px;bottom:70px;z-index:900;background:#fff;
+    border:1px solid var(--mf-border);border-radius:10px;box-shadow:0 3px 12px rgba(0,0,0,.18);
+    padding:7px 10px;font-size:11.5px;width:200px;display:none;line-height:1.5;
+    overflow-wrap:break-word;word-break:break-word;}
+  #cfPanel.hien{display:block;}
+  #cfPanel b{color:var(--mf-blue-dark);}
+  #cfPanel .lg{display:flex;align-items:center;gap:6px;padding:1px 0;}
+  #cfPanel .lg i{width:12px;height:9px;border-radius:2px;flex:0 0 12px;border:1px solid rgba(0,0,0,.3);}
+
   /* Chú giải thang màu RSRP cho lớp "Điểm đo sóng đã nhập" */
   .drive-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;
     border:1px solid rgba(0,0,0,.25);}
@@ -379,6 +389,7 @@
   .banner-ok{background:#dcfce7;color:#166534;border:1px solid #b7ecc7;}
   .banner-warn{background:#fff3cd;color:#8a6a00;border:1px solid #ffe08a;}
   .banner-info{background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe;}
+  .banner-err{background:#fde8e8;color:#9b1c1c;border:1px solid #f8b4b4;}
   #miniPickMap{height:260px;border-radius:8px;border:1px solid var(--mf-border);margin-top:6px;}
 
   /* ---- Route edit toolbar ---- */
@@ -478,6 +489,7 @@
       <button data-tab="home">🏠 Mobifone Hưng Yên</button>
       <button data-tab="field" class="active">🗺 Bản đồ thực địa</button>
       <button data-tab="fttx">🌐 FTTx</button>
+      <button data-tab="dosong">📶 Đo sóng</button>
       <button data-tab="pakh">📝 PAKH</button>
       <button data-tab="admin" id="tabAdminBtn" style="display:none;">🛡 Duyệt &amp; Quản trị</button>
       <button data-tab="help">❔ Help</button>
@@ -670,6 +682,12 @@
           </div>
         </div>
       </div>
+      <!-- Chú giải cánh sóng cell file (GĐ9 đợt 2) — chỉ hiện khi đã nhập cell file -->
+      <div id="cfPanel">
+        <div style="font-weight:700;color:var(--mf-blue-dark);margin-bottom:4px;">📡 Cánh sóng cell file</div>
+        <div id="cfPanelLegend"></div>
+        <div id="cfPanelInfo" style="color:var(--mf-muted);margin-top:3px;"></div>
+      </div>
       <div id="routeEditBar">
         <span class="title">✏️ Đang sửa tuyến: <span id="reName"></span></span>
         <button class="btn btn-purple btn-sm" id="btnSaveRoute">💾 Lưu đề xuất</button>
@@ -776,6 +794,82 @@
             </div>
             <button class="btn btn-primary btn-sm" id="fx_btnImportSubmit" style="margin-top:8px;display:none;">📤 Gửi đề xuất duyệt</button>
             <div class="small-note" id="fx_importBanner" style="margin-top:8px;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= ĐO SÓNG (GĐ9 đợt 2 — 13/08/2026) ================= -->
+    <div class="page-wrap" id="dosongWrap">
+      <div class="subnav">
+        <button data-dstab="cell" class="active">📡 Cell file</button>
+        <button data-dstab="log">📁 Kết quả đo</button>
+      </div>
+      <div class="page-body">
+
+        <!-- ---------- Cell file ---------- -->
+        <div class="page-inner active" id="dsTabCell">
+          <div class="card">
+            <h3>📡 Nhập cell file (Form 7)</h3>
+            <div class="small-note" style="margin-bottom:8px;">
+              File Excel Form 7 có các sheet <b>3G</b>, <b>4G</b>, <b>5G</b> (dòng đầu là tiêu đề).
+              Hệ thống đọc <b>Site, Lat, Lon, Cell, Azimuth, Beam, Radius</b> và các tham số nhận dạng ô
+              (<b>ENodeB ID + Cell ID + PCI + DLEARFCN</b> cho 4G/5G; <b>LAC + CI + SC + UARFCN</b> cho 3G)
+              để vẽ cánh sóng và nối kết quả đo tới đúng ô đang phục vụ.
+              Cell file chỉ lưu <b>trong máy anh/chị</b> (IndexedDB), không đẩy lên máy chủ.
+            </div>
+            <input type="file" id="cfFile" accept=".xlsx,.xls" style="font-size:12.5px;">
+            <button class="btn btn-outline btn-sm" id="cfBtnXoa" style="margin-left:8px;">🗑 Xoá cell file</button>
+            <div id="cfBanner" style="margin-top:8px;"></div>
+            <div style="margin-top:8px;display:none;" id="cfTomTatWrap">
+              <table class="data-table" style="max-width:560px;">
+                <thead><tr><th>Lớp</th><th>Số ô (cell)</th><th>Số site</th><th>Có azimuth</th></tr></thead>
+                <tbody id="cfTomTat"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>🌐 Hiển thị cánh sóng trên bản đồ</h3>
+            <div class="small-note" style="margin-bottom:8px;">
+              Cánh sóng chỉ vẽ từ mức phóng to <b>12</b> trở lên và chỉ vẽ phần đang nằm trong khung nhìn —
+              vẽ hết vài chục nghìn ô cùng lúc sẽ làm treo trình duyệt.
+            </div>
+            <div class="filter-row">
+              <div class="fitem"><label>Lớp hiển thị</label>
+                <div style="display:flex;gap:12px;align-items:center;padding-top:4px;">
+                  <label class="ds-ck"><input type="checkbox" id="cfHien3G"> <span style="color:#f59e0b;font-weight:700;">3G</span></label>
+                  <label class="ds-ck"><input type="checkbox" id="cfHien4G" checked> <span style="color:#1565c0;font-weight:700;">4G</span></label>
+                  <label class="ds-ck"><input type="checkbox" id="cfHien5G" checked> <span style="color:#7c3aed;font-weight:700;">5G</span></label>
+                </div>
+              </div>
+              <div class="fitem"><label>Độ dài cánh sóng</label>
+                <select id="cfDoDai">
+                  <option value="150">150 m</option>
+                  <option value="300" selected>300 m</option>
+                  <option value="600">600 m</option>
+                  <option value="1000">1 km</option>
+                  <option value="file">Theo cột Radius trong file</option>
+                </select>
+              </div>
+              <div class="fitem"><label>Nối tới ô đang phục vụ</label>
+                <div style="padding-top:6px;">
+                  <label class="ds-ck"><input type="checkbox" id="cfNoiServing" checked> <span>Vẽ line xanh từ điểm đo → site serving</span></label>
+                </div>
+              </div>
+            </div>
+            <div class="small-note" id="cfVeInfo" style="margin-top:6px;"></div>
+            <button class="btn btn-primary btn-sm" id="cfBtnXemBanDo" style="margin-top:6px;">🗺 Sang bản đồ xem cánh sóng</button>
+          </div>
+        </div>
+
+        <!-- ---------- Kết quả đo (đợt 3) ---------- -->
+        <div class="page-inner" id="dsTabLog">
+          <div class="card">
+            <h3>📁 Các buổi đo đã lưu</h3>
+            <div class="small-note" id="dsLogNote" style="margin-bottom:8px;">Đang chuẩn bị (đợt 3): lưu buổi đo trong máy, đồng bộ lên Google Drive và xuất Excel + KMZ.</div>
+            <div id="dsLogWrap"></div>
           </div>
         </div>
 
@@ -3671,6 +3765,9 @@ function dsPopup(d){
   if(d.dl != null) h.push('Tải xuống: <b>' + dsSo(d.dl) + ' Mbps</b>');
   if(d.ul != null) h.push('Tải lên: <b>' + dsSo(d.ul) + ' Mbps</b>');
   if(d.ping != null) h.push('Ping: <b>' + dsSo(d.ping, 0) + ' ms</b>');
+  if(d.svCell) h.push('<span style="color:#1565c0;">Ô phục vụ: <b>' + escapeHtmlLite(d.svCell) + '</b>'
+    + (d.svAz != null ? ' · azimuth ' + d.svAz + '°' : '')
+    + '<br><span style="color:var(--mf-muted);font-size:11.5px;">khớp theo ' + escapeHtmlLite(d.svCach) + '</span></span>');
   return '<div style="min-width:170px;font-size:12.5px;line-height:1.6;">' + h.join('<br>') + '</div>';
 }
 
@@ -3679,6 +3776,15 @@ function dsPopup(d){
 function dsVeCham(){
   dsLayer.clearLayers();
   let hien = 0;
+  // Line xanh tới ô đang phục vụ — vẽ TRƯỚC chấm để chấm nằm trên, giống cách máy TEMS thể hiện.
+  const noiSv = (document.getElementById('cfNoiServing') || {}).checked;
+  if(noiSv && typeof CF !== 'undefined' && CF && CF.cells && CF.cells.length){
+    DS.diem.forEach(d => {
+      if(d.svLat == null || !isValidLatLon(d.lat, d.lon) || !isValidLatLon(d.svLat, d.svLon)) return;
+      L.polyline([[d.lat, d.lon], [d.svLat, d.svLon]],
+        {color:'#1565c0', weight:1.8, opacity:0.8}).addTo(dsLayer);
+    });
+  }
   DS.diem.forEach(d => {
     if(!isValidLatLon(d.lat, d.lon)) return;
     const mau = dsMauDiem(d);
@@ -3748,6 +3854,8 @@ function dsTuIdle(d, pos){
   return {
     t: Date.now(), lat: pos ? pos.lat : null, lon: pos ? pos.lon : null,
     gen, cellId: (d && d.cellId != null) ? d.cellId : null, pci: (d && d.pci != null) ? d.pci : null,
+    // tac + arfcn giữ lại để tra ngược ra ô phục vụ trong cell file (GĐ9 đợt 2)
+    tac: so(d && d.tac), arfcn: so(d && d.tanSo),
     rsrp: dsLa3G(gen) ? null : so(d && d.rsrp),
     rscp: dsLa3G(gen) ? so(d && (d.rscp != null ? d.rscp : d.rsrp)) : null,
     rsrq: dsLa3G(gen) ? null : so(d && d.rsrq),
@@ -3756,6 +3864,7 @@ function dsTuIdle(d, pos){
   };
 }
 function dsThemDiem(rec){
+  if(typeof cfGanServing === 'function') cfGanServing(rec);
   DS.diem.push(rec);
   dsVeCham();
   return rec;
@@ -3904,9 +4013,11 @@ function dsVeKetQua(data, sp, dangDoTocDo){
 /* ---- Xuất nhanh CSV (bản đầy đủ lên Google Drive để ở đợt 3) ---- */
 function dsXuatCsv(){
   if(!DS.diem.length){ alert('Chưa có điểm đo nào.'); return; }
-  let out = 'Thoi gian,Lat,Long,Cong nghe,Cell ID,PCI,RSRP (dBm),RSCP (dBm),RSRQ (dB),Ec/Io (dB),SINR (dB),Tai xuong (Mbps),Tai len (Mbps),Ping (ms)\n';
+  let out = 'Thoi gian,Lat,Long,Cong nghe,Cell ID,PCI,TAC/LAC,Tan so,RSRP (dBm),RSCP (dBm),RSRQ (dB),Ec/Io (dB),SINR (dB),'
+          + 'Tai xuong (Mbps),Tai len (Mbps),Ping (ms),O phuc vu,Site phuc vu,Azimuth,Cach khop\n';
   out += DS.diem.map(d => [new Date(d.t).toLocaleString('vi-VN'), d.lat, d.lon, d.gen, d.cellId, d.pci,
-    d.rsrp, d.rscp, d.rsrq, d.ecio, d.sinr, d.dl, d.ul, d.ping].map(csvCell).join(',')).join('\n');
+    d.tac, d.arfcn, d.rsrp, d.rscp, d.rsrq, d.ecio, d.sinr, d.dl, d.ul, d.ping,
+    d.svCell, d.svSite, d.svAz, d.svCach].map(csvCell).join(',')).join('\n');
   downloadCsv('Diem_do_song_' + isoDate(new Date()) + '.csv', out);
 }
 
@@ -3974,6 +4085,424 @@ function getPositionOnce(){
     );
   });
 }
+
+/* ============================================================================
+   CELL FILE (Form 7) — GĐ9 đợt 2, 13/08/2026
+   Vì sao để hẳn 1 tab riêng: cell file là dữ liệu vô tuyến của riêng người đo
+   (vài chục nghìn dòng, đổi liên tục theo tối ưu mạng), KHÔNG phải dữ liệu CSHT
+   dùng chung nên không đẩy lên máy chủ — chỉ nằm trong máy người dùng (IndexedDB).
+   Ba việc nó phục vụ: (1) vẽ cánh sóng theo azimuth, (2) tra ngược Cell ID đo
+   được ra đúng ô đang phục vụ, (3) nối line xanh điểm đo → site serving.
+   ============================================================================ */
+
+/* ---- Kho lưu trong máy (dùng chung cho cả đợt 3 — lưu buổi đo) ----
+   Bọc try/catch toàn bộ: IndexedDB bị chặn khi mở file bằng đường dẫn file://
+   hoặc khi trình duyệt ở chế độ riêng tư, lúc đó tính năng vẫn phải chạy được
+   trong bộ nhớ, chỉ mất phần nhớ qua lần mở sau. */
+const IDB_TEN = 'mbf_hyn_dosong', IDB_KHO = 'kv';
+function idbMo(){
+  return new Promise((ok, loi) => {
+    if(!window.indexedDB) return loi(new Error('Trình duyệt không hỗ trợ IndexedDB'));
+    let rq;
+    try { rq = indexedDB.open(IDB_TEN, 1); } catch(e){ return loi(e); }
+    rq.onupgradeneeded = () => {
+      const db = rq.result;
+      if(!db.objectStoreNames.contains(IDB_KHO)) db.createObjectStore(IDB_KHO);
+    };
+    rq.onsuccess = () => ok(rq.result);
+    rq.onerror = () => loi(rq.error || new Error('Không mở được kho dữ liệu'));
+  });
+}
+async function idbLuu(khoa, giaTri){
+  try {
+    const db = await idbMo();
+    return await new Promise((ok, loi) => {
+      const t = db.transaction(IDB_KHO, 'readwrite');
+      t.objectStore(IDB_KHO).put(giaTri, khoa);
+      t.oncomplete = () => ok(true);
+      t.onerror = () => loi(t.error);
+    });
+  } catch(e){ return false; }
+}
+async function idbDoc(khoa){
+  try {
+    const db = await idbMo();
+    return await new Promise((ok, loi) => {
+      const t = db.transaction(IDB_KHO, 'readonly');
+      const r = t.objectStore(IDB_KHO).get(khoa);
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => loi(r.error);
+    });
+  } catch(e){ return undefined; }
+}
+async function idbXoa(khoa){
+  try {
+    const db = await idbMo();
+    return await new Promise((ok, loi) => {
+      const t = db.transaction(IDB_KHO, 'readwrite');
+      t.objectStore(IDB_KHO).delete(khoa);
+      t.oncomplete = () => ok(true);
+      t.onerror = () => loi(t.error);
+    });
+  } catch(e){ return false; }
+}
+
+const CF_MAU  = {'3G':'#f59e0b', '4G':'#1565c0', '5G':'#7c3aed'};
+const CF_HESO = {'3G':0.70, '4G':0.85, '5G':1.00};   // lệch độ dài để 3 lớp cùng site không đè kín nhau
+const CF_BEAM_MIN = 20, CF_BEAM_MAX = 120;           // bề rộng vẽ (độ) — kẹp lại cho nhìn được
+const CF_MAX_VE = 1500;                              // trần số hình quạt vẽ 1 lượt
+const CF_ZOOM_MIN = 12;
+
+// Cố ý dùng var: dsThemDiem/dsVeCham nằm TRƯỚC khối này trong file và có gọi sang
+// cfGanServing — với const/let sẽ dính vùng chết TDZ nếu có nhánh nào chạy sớm.
+var CF = {
+  cells: [], ten: '', khiNao: 0,
+  idx: {eci:new Map(), raw:new Map(), lacci:new Map(), ci16:new Map(), pciArfcn:new Map(), pci:new Map()},
+  thongKe: null, ngoaiDiaBan: 0, loiToaDo: 0
+};
+const cfRenderer = L.canvas({padding: 0.3});
+const cfLayer = L.layerGroup();
+
+function cfChuan(s){ return String(s == null ? '' : s).trim().toLowerCase().replace(/[\s_\-\.\(\)\/\n]+/g, ''); }
+function cfSo(v){
+  if(v === null || v === undefined || v === '') return null;
+  const n = Number(String(v).replace(/,/g, '.').replace(/[^\d.\-+eE]/g, ''));
+  return isFinite(n) ? n : null;
+}
+/** Tìm chỉ số cột theo danh sách tên có thể gặp (không phân biệt hoa/thường, dấu cách, gạch dưới). */
+function cfCot(hdr, ...ten){
+  const c = hdr.map(cfChuan);
+  for(const t of ten){ const i = c.indexOf(cfChuan(t)); if(i >= 0) return i; }
+  return -1;
+}
+
+/** Đọc 1 file Form 7 -> danh sách ô. Chỉ lấy 3 sheet 3G/4G/5G; các sheet khác
+    (IBC_site, Site_SmallCell, CRAN) không có azimuth nên chưa dùng tới. */
+function cfDocWorkbook(wb){
+  const cells = [];
+  const tk = {};
+  let ngoai = 0, loi = 0;
+  ['3G','4G','5G'].forEach(gen => {
+    const ten = wb.SheetNames.find(n => cfChuan(n) === cfChuan(gen));
+    if(!ten) return;
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[ten], {header:1, defval:''});
+    if(!rows.length) return;
+    const hdr = rows[0];
+    const iSite = cfCot(hdr, 'Site'), iLat = cfCot(hdr, 'Lat', 'Latitude'), iLon = cfCot(hdr, 'Lon', 'Long', 'Longitude');
+    const iCell = cfCot(hdr, 'Cell', 'Cell Name'), iAz = cfCot(hdr, 'Azimuth', 'Azi');
+    const iBeam = cfCot(hdr, 'Beam', 'Beamwidth'), iBk = cfCot(hdr, 'Radius');
+    const iCao = cfCot(hdr, 'ANT_HEIGHT', 'Height'), iCs = cfCot(hdr, 'Cell power (W)', 'Cell power');
+    const iTilt = cfCot(hdr, 'ANT_MEC_TILT', 'TOTAL_TILT', 'Tilt');
+    const la3g = gen === '3G';
+    const iPci = la3g ? cfCot(hdr, 'SC', 'PSC') : cfCot(hdr, 'PCI');
+    const iArf = la3g ? cfCot(hdr, 'UARFCN') : cfCot(hdr, 'DLEARFCN', 'EARFCN', 'NRARFCN');
+    const iTac = la3g ? cfCot(hdr, 'LAC') : cfCot(hdr, 'TAC');
+    const iCi  = la3g ? cfCot(hdr, 'CI', 'CID') : -1;
+    const iEnb = la3g ? -1 : cfCot(hdr, 'ENodeB ID', 'eNodeBID', 'gNodeB ID');
+    const iCid = la3g ? -1 : cfCot(hdr, 'Cell ID', 'CellID');
+    const iBw  = cfCot(hdr, 'Bandwidth');
+    let so = 0, coAz = 0; const sites = new Set();
+
+    for(let r = 1; r < rows.length; r++){
+      const row = rows[r];
+      if(!row || !row.length) continue;
+      const site = String(row[iSite] == null ? '' : row[iSite]).trim();
+      const lat = cfSo(row[iLat]), lon = cfSo(row[iLon]);
+      if(!site && lat === null) continue;
+      if(lat === null || lon === null || !isValidLatLon(lat, lon)){ loi++; continue; }
+      if(!toaDoHopLyChoDiaBan(lat, lon)) ngoai++;   // vẫn nhận, chỉ đếm để báo — file mẫu là dữ liệu tỉnh khác
+      const az = iAz >= 0 ? cfSo(row[iAz]) : null;
+      const c = {
+        gen, site, lat, lon,
+        cell: iCell >= 0 ? String(row[iCell] || '').trim() : '',
+        az, beam: iBeam >= 0 ? cfSo(row[iBeam]) : null,
+        radius: iBk >= 0 ? cfSo(row[iBk]) : null,
+        cao: iCao >= 0 ? cfSo(row[iCao]) : null,
+        tilt: iTilt >= 0 ? cfSo(row[iTilt]) : null,
+        cs: iCs >= 0 ? cfSo(row[iCs]) : null,
+        bw: iBw >= 0 ? String(row[iBw] || '').trim() : '',
+        pci: iPci >= 0 ? cfSo(row[iPci]) : null,
+        arfcn: iArf >= 0 ? cfSo(row[iArf]) : null,
+        tac: iTac >= 0 ? cfSo(row[iTac]) : null,
+        ci: iCi >= 0 ? cfSo(row[iCi]) : null,
+        enb: iEnb >= 0 ? cfSo(row[iEnb]) : null,
+        cidStr: iCid >= 0 ? String(row[iCid] == null ? '' : row[iCid]).trim() : ''
+      };
+      // "130267-11" -> ô số 11 của eNodeB 130267 => ECI = eNodeB*256 + 11 (đúng cách Android trả về)
+      if(c.cidStr){
+        const m = c.cidStr.match(/^\s*(\d+)\s*[-_/]\s*(\d+)\s*$/);
+        if(m){ if(c.enb === null) c.enb = +m[1]; c.localId = +m[2]; }
+        else { const n = cfSo(c.cidStr); if(n !== null && n > 65535) c.eci = n; }
+      }
+      if(c.eci == null && c.enb !== null && c.localId != null) c.eci = c.enb * 256 + c.localId;
+      cells.push(c); so++; sites.add(site);
+      if(az !== null) coAz++;
+    }
+    tk[gen] = {so, site: sites.size, coAz};
+  });
+  return {cells, tk, ngoai, loi};
+}
+
+function cfDungChiMuc(){
+  const idx = {eci:new Map(), raw:new Map(), lacci:new Map(), ci16:new Map(), pciArfcn:new Map(), pci:new Map()};
+  const them = (m, k, c) => { if(k === null || k === undefined || k === '') return;
+                              const a = m.get(k); if(a) a.push(c); else m.set(k, [c]); };
+  CF.cells.forEach(c => {
+    // 4G ưu tiên hơn 5G khi trùng ECI: máy Android báo ô neo LTE mới là ô đang phục vụ thật
+    if(c.eci != null && (!idx.eci.has(c.eci) || c.gen === '4G')) idx.eci.set(c.eci, c);
+    if(c.cidStr && !idx.raw.has(c.cidStr)) idx.raw.set(c.cidStr, c);
+    if(c.gen === '3G' && c.ci !== null){
+      if(c.tac !== null) idx.lacci.set(c.tac + '|' + c.ci, c);
+      if(!idx.ci16.has(c.ci)) idx.ci16.set(c.ci, c);
+    }
+    if(c.pci !== null){
+      if(c.arfcn !== null) them(idx.pciArfcn, c.pci + '|' + c.arfcn, c);
+      them(idx.pci, c.gen + '|' + c.pci, c);
+    }
+  });
+  CF.idx = idx;
+}
+
+/** Tra Cell ID / PCI đo được ra đúng ô trong cell file.
+    Thứ tự ưu tiên từ chắc chắn tới phỏng đoán, có ghi lại cách khớp để người dùng
+    biết line xanh đang dựa trên căn cứ nào. */
+function cfTimServing(d){
+  if(!CF || !CF.cells || !CF.cells.length) return null;
+  const so = v => (v === null || v === undefined || v === '' || !isFinite(v)) ? null : +v;
+  const id = so(d.cellId), pci = so(d.pci), arfcn = so(d.arfcn), tac = so(d.tac);
+  const la3g = dsLa3G(d.gen);
+  const gen = la3g ? '3G' : (dsLa5G(d.gen) ? '5G' : '4G');
+  const gan = ds => {
+    if(!ds || !ds.length) return null;
+    if(ds.length === 1 || !isValidLatLon(d.lat, d.lon)) return ds[0];
+    let best = null, bd = Infinity;
+    ds.forEach(c => { const kc = haversineM(d.lat, d.lon, c.lat, c.lon); if(kc < bd){ bd = kc; best = c; } });
+    return best;
+  };
+  if(id !== null){
+    if(!la3g){
+      const c = CF.idx.eci.get(id);
+      if(c) return {cell:c, cach:'ECI'};
+    } else {
+      if(tac !== null){ const c = CF.idx.lacci.get(tac + '|' + (id & 0xFFFF)); if(c) return {cell:c, cach:'LAC + CI'}; }
+      const c2 = CF.idx.ci16.get(id & 0xFFFF) || CF.idx.ci16.get(id);
+      if(c2) return {cell:c2, cach:'CI'};
+    }
+    const cr = CF.idx.raw.get(String(id));
+    if(cr) return {cell:cr, cach:'Cell ID'};
+  }
+  if(pci !== null && arfcn !== null){
+    const c = gan(CF.idx.pciArfcn.get(pci + '|' + arfcn));
+    if(c) return {cell:c, cach:'PCI + tần số'};
+  }
+  if(pci !== null){
+    const c = gan(CF.idx.pci.get(gen + '|' + pci));
+    if(c) return {cell:c, cach:'PCI (chọn site gần nhất)'};
+  }
+  return null;
+}
+/** Gắn thông tin ô phục vụ vào 1 điểm đo (gọi lại được nhiều lần khi đổi cell file). */
+function cfGanServing(rec){
+  const kq = cfTimServing(rec);
+  if(kq){
+    rec.svCell = kq.cell.cell || kq.cell.site; rec.svSite = kq.cell.site;
+    rec.svLat = kq.cell.lat; rec.svLon = kq.cell.lon;
+    rec.svAz = kq.cell.az; rec.svCach = kq.cach;
+  } else {
+    rec.svCell = null; rec.svSite = null; rec.svLat = null; rec.svLon = null; rec.svAz = null; rec.svCach = null;
+  }
+  return rec;
+}
+
+/* ---- Hình học cánh sóng ---- */
+function cfDiemXa(lat, lon, huongDo, met){
+  const R = 6378137, d = met / R, b = huongDo * Math.PI / 180;
+  const p1 = lat * Math.PI / 180, l1 = lon * Math.PI / 180;
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(b));
+  const l2 = l1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return [p2 * 180 / Math.PI, l2 * 180 / Math.PI];
+}
+function cfDoDaiCanh(c){
+  const chon = (document.getElementById('cfDoDai') || {}).value || '300';
+  const goc = chon === 'file' ? (c.radius || 300) : (+chon || 300);
+  return goc * (CF_HESO[c.gen] || 1);
+}
+function cfHinhQuat(c){
+  const met = cfDoDaiCanh(c);
+  let rong = c.beam || 65;
+  rong = Math.max(CF_BEAM_MIN, Math.min(CF_BEAM_MAX, rong));
+  const tu = c.az - rong / 2, den = c.az + rong / 2;
+  const pts = [[c.lat, c.lon]];
+  const buoc = Math.max(2, Math.round(rong / 6));
+  for(let a = tu; a <= den + 0.001; a += rong / buoc) pts.push(cfDiemXa(c.lat, c.lon, a, met));
+  return pts;
+}
+function cfLopBat(gen){
+  const el = document.getElementById('cfHien' + gen);
+  return !!(el && el.checked);
+}
+function cfPopup(c){
+  const d = (k, v, dv) => (v === null || v === undefined || v === '') ? ''
+    : `<div class="sig-line"><span>${k}</span><span><b>${escapeHtmlLite(v)}${dv || ''}</b></span></div>`;
+  return `<div style="min-width:190px;font-size:12.5px;">
+    <b style="color:${CF_MAU[c.gen]};">${escapeHtmlLite(c.cell || c.site)} · ${c.gen}</b>
+    <div style="margin-top:4px;">
+      ${d('Site', c.site)}
+      ${d('Azimuth', c.az, '°')}
+      ${d('Bề rộng', c.beam, '°')}
+      ${d('Bán kính (file)', c.radius, ' m')}
+      ${d('Cao ăng-ten', c.cao, ' m')}
+      ${d('Tilt', c.tilt, '°')}
+      ${d('Công suất', c.cs, ' W')}
+      ${d(c.gen === '3G' ? 'SC' : 'PCI', c.pci)}
+      ${d(c.gen === '3G' ? 'UARFCN' : 'EARFCN/NR-ARFCN', c.arfcn)}
+      ${d(c.gen === '3G' ? 'LAC' : 'TAC', c.tac)}
+      ${d(c.gen === '3G' ? 'CI' : 'Cell ID', c.gen === '3G' ? c.ci : c.cidStr)}
+      ${d('ECI', c.eci)}
+      ${d('Băng thông', c.bw)}
+    </div></div>`;
+}
+
+/** Vẽ lại cánh sóng cho khung nhìn hiện tại.
+    Bắt buộc lọc theo khung nhìn + trần CF_MAX_VE: cell file cả tỉnh có thể vài chục
+    nghìn ô, vẽ hết một lượt là treo trình duyệt (đã gặp ở phần import CSHT trước đây). */
+function cfVeCanhSong(){
+  cfLayer.clearLayers();
+  const panel = document.getElementById('cfPanel');
+  const info = document.getElementById('cfPanelInfo');
+  if(!CF.cells.length){ if(panel) panel.classList.remove('hien'); return; }
+  if(panel) panel.classList.add('hien');
+  cfVeChuGiai();
+  const batKy = ['3G','4G','5G'].some(cfLopBat);
+  if(!batKy){ if(info) info.textContent = 'Chưa bật lớp nào.'; return; }
+  const zoom = map.getZoom();
+  if(zoom < CF_ZOOM_MIN){
+    if(info) info.textContent = `Phóng to tới mức ${CF_ZOOM_MIN} để hiện cánh sóng (đang ${zoom}).`;
+    return;
+  }
+  const khung = map.getBounds().pad(0.25);
+  let ve = 0, hop = 0;
+  for(const c of CF.cells){
+    if(c.az === null || !cfLopBat(c.gen)) continue;
+    if(!khung.contains([c.lat, c.lon])) continue;
+    hop++;
+    if(ve >= CF_MAX_VE) continue;
+    ve++;
+    L.polygon(cfHinhQuat(c), {renderer:cfRenderer, color:CF_MAU[c.gen], weight:1,
+      opacity:0.9, fillColor:CF_MAU[c.gen], fillOpacity:0.18})
+      .bindPopup(cfPopup(c)).addTo(cfLayer);
+  }
+  if(!map.hasLayer(cfLayer)) map.addLayer(cfLayer);
+  if(info) info.textContent = ve < hop
+    ? `Đang vẽ ${ve}/${hop} ô trong khung nhìn (giới hạn ${CF_MAX_VE} để máy không treo) — phóng to thêm để xem đủ.`
+    : `Đang vẽ ${ve} ô trong khung nhìn.`;
+}
+function cfVeChuGiai(){
+  const box = document.getElementById('cfPanelLegend');
+  if(!box) return;
+  box.innerHTML = ['3G','4G','5G'].filter(g => CF.thongKe && CF.thongKe[g] && CF.thongKe[g].so)
+    .map(g => `<div class="lg"><i style="background:${CF_MAU[g]};opacity:.55;border-color:${CF_MAU[g]}"></i>${g} · ${CF.thongKe[g].so} ô</div>`).join('')
+    || '<div class="lg" style="color:var(--mf-muted);">Chưa có ô nào</div>';
+}
+
+/* ---- Bảng tóm tắt trong tab Đo sóng ---- */
+function cfVeTomTat(){
+  const wrap = document.getElementById('cfTomTatWrap');
+  const body = document.getElementById('cfTomTat');
+  const banner = document.getElementById('cfBanner');
+  if(!wrap || !body) return;
+  if(!CF.cells.length){
+    wrap.style.display = 'none';
+    if(banner && !banner.dataset.giu) banner.innerHTML = '<div class="small-note">Chưa nhập cell file nào.</div>';
+    return;
+  }
+  wrap.style.display = 'block';
+  body.innerHTML = ['3G','4G','5G'].map(g => {
+    const t = (CF.thongKe && CF.thongKe[g]) || {so:0, site:0, coAz:0};
+    return `<tr><td><b style="color:${CF_MAU[g]};">${g}</b></td><td>${t.so}</td><td>${t.site}</td><td>${t.coAz}</td></tr>`;
+  }).join('');
+  const canh = [];
+  if(CF.ngoaiDiaBan) canh.push(`${CF.ngoaiDiaBan} ô có toạ độ nằm ngoài khung Hưng Yên — vẫn nhận nhưng cánh sóng sẽ vẽ ở nơi khác, kiểm tra lại cột Lat/Lon.`);
+  if(CF.loiToaDo) canh.push(`${CF.loiToaDo} dòng bị bỏ do thiếu hoặc sai toạ độ.`);
+  if(banner) banner.innerHTML =
+    `<div class="banner banner-ok">✅ Đang dùng cell file <b>${escapeHtmlLite(CF.ten)}</b> · ${CF.cells.length} ô`
+    + (CF.khiNao ? ` · nhập lúc ${new Date(CF.khiNao).toLocaleString('vi-VN')}` : '') + '</div>'
+    + (canh.length ? `<div class="banner banner-warn" style="margin-top:6px;">⚠ ${canh.join('<br>')}</div>` : '');
+  if(banner) banner.dataset.giu = '1';
+}
+
+/** Nạp bộ ô vào bộ nhớ + dựng chỉ mục + vẽ lại mọi thứ phụ thuộc nó. */
+function cfApDung(kq, ten, khiNao){
+  CF.cells = kq.cells; CF.thongKe = kq.tk; CF.ngoaiDiaBan = kq.ngoai || 0; CF.loiToaDo = kq.loi || 0;
+  CF.ten = ten || ''; CF.khiNao = khiNao || Date.now();
+  cfDungChiMuc();
+  DS.diem.forEach(cfGanServing);          // có cell file rồi thì các điểm đo cũ cũng phải nối lại
+  cfVeTomTat(); cfVeCanhSong(); dsVeCham();
+}
+async function cfNapTuMay(){
+  const g = await idbDoc('cellfile');
+  if(g && g.cells && g.cells.length){
+    CF.cells = g.cells; CF.thongKe = g.tk; CF.ten = g.ten || ''; CF.khiNao = g.khiNao || 0;
+    CF.ngoaiDiaBan = g.ngoai || 0; CF.loiToaDo = g.loi || 0;
+    cfDungChiMuc(); cfVeTomTat(); cfVeCanhSong();
+  }
+}
+
+/* ---- Sự kiện ---- */
+(function cfGanSuKien(){
+  const inp = document.getElementById('cfFile');
+  if(!inp) return;
+  inp.addEventListener('change', async () => {
+    const f = (inp.files || [])[0];
+    const banner = document.getElementById('cfBanner');
+    if(!f) return;
+    banner.dataset.giu = '';
+    banner.innerHTML = '<div class="small-note">⏳ Đang đọc cell file…</div>';
+    try {
+      const wb = XLSX.read(new Uint8Array(await f.arrayBuffer()), {type:'array'});
+      const kq = cfDocWorkbook(wb);
+      if(!kq.cells.length){
+        banner.innerHTML = '<div class="banner banner-warn">⚠ Không đọc được ô nào. File cần có sheet tên <b>3G</b>, <b>4G</b> hoặc <b>5G</b>, dòng đầu là tiêu đề và có cột <b>Site, Lat, Lon</b>.</div>';
+        return;
+      }
+      cfApDung(kq, f.name, Date.now());
+      await idbLuu('cellfile', {cells:CF.cells, tk:CF.thongKe, ten:CF.ten, khiNao:CF.khiNao,
+                                ngoai:CF.ngoaiDiaBan, loi:CF.loiToaDo});
+    } catch(e){
+      banner.innerHTML = '<div class="banner banner-err">❌ Lỗi đọc file: ' + escapeHtmlLite(e.message) + '</div>';
+    }
+  });
+  document.getElementById('cfBtnXoa').addEventListener('click', async () => {
+    if(!CF.cells.length){ return; }
+    if(!confirm('Xoá cell file đang dùng (' + CF.cells.length + ' ô) khỏi máy?')) return;
+    CF.cells = []; CF.thongKe = null; CF.ten = ''; CF.khiNao = 0; CF.ngoaiDiaBan = 0; CF.loiToaDo = 0;
+    cfDungChiMuc();
+    DS.diem.forEach(cfGanServing);
+    cfLayer.clearLayers();
+    document.getElementById('cfPanel').classList.remove('hien');
+    const banner = document.getElementById('cfBanner');
+    banner.dataset.giu = ''; cfVeTomTat(); dsVeCham();
+    await idbXoa('cellfile');
+  });
+  ['cfHien3G','cfHien4G','cfHien5G','cfDoDai'].forEach(id =>
+    document.getElementById(id).addEventListener('change', cfVeCanhSong));
+  document.getElementById('cfNoiServing').addEventListener('change', dsVeCham);
+  document.getElementById('cfBtnXemBanDo').addEventListener('click', () => {
+    switchTab('field');
+    setTimeout(cfVeCanhSong, 120);
+  });
+  document.querySelectorAll('#dosongWrap .subnav button').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('#dosongWrap .subnav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const t = btn.dataset.dstab;
+      document.getElementById('dsTabCell').classList.toggle('active', t === 'cell');
+      document.getElementById('dsTabLog').classList.toggle('active', t === 'log');
+    };
+  });
+  map.on('moveend zoomend', () => { if(CF.cells.length) cfVeCanhSong(); });
+  cfNapTuMay();
+})();
 
 /** Đọc lại idle 1 lượt và vẽ lại khung. Speedtest KHÔNG chạy ở đây (nút 🔄 chỉ để
     làm tươi thông số sóng), muốn đo tốc độ thì bấm nút đo chính cho rõ ràng. */
@@ -7203,8 +7732,10 @@ function switchTab(tab){
   document.getElementById('adminWrap').style.display = tab==='admin' ? 'flex' : 'none';
   document.getElementById('helpWrap').style.display = tab==='help' ? 'flex' : 'none';
   document.getElementById('fttxWrap').style.display = tab==='fttx' ? 'flex' : 'none';
+  document.getElementById('dosongWrap').style.display = tab==='dosong' ? 'flex' : 'none';
   document.getElementById('comingSoon').style.display = 'none';   // GĐ3a: FTTx đã có nội dung thật, không còn màn "sắp có"
   if(tab==='fttx') ensureFttxTab();
+  if(tab==='dosong' && typeof cfVeTomTat === 'function') cfVeTomTat();
   if(tab==='field') setTimeout(()=>map.invalidateSize(), 60);
   if(tab==='home' && typeof ensureMbfHomeContent==='function') ensureMbfHomeContent();
   if(tab==='pakh') refreshPakhDashboard();

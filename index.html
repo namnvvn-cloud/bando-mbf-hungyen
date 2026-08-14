@@ -252,16 +252,19 @@
 
   /* ---- Thanh công cụ đo đạc (góc trái bản đồ): đo khoảng cách / route / diện tích / đo sóng / speedtest ---- */
   .measure-tools{position:absolute;top:10px;left:10px;z-index:900;display:flex;flex-direction:column;gap:8px;max-width:330px;}
-  /* Ô tìm kiếm + nút Công cụ + nút Mở rộng nằm cùng 1 hàng (13/08/2026) */
+  /* Ô tìm kiếm + nút Công cụ nằm cùng 1 hàng, góc trái bản đồ (13/08/2026) */
   .map-top-row{display:flex;align-items:stretch;gap:6px;}
   .tool-btn-mini{padding:5px 9px;font-size:11.5px;white-space:nowrap;background:rgba(255,255,255,.72);
     backdrop-filter:blur(2px);box-shadow:0 1px 4px rgba(0,0,0,.10);}
   .tool-btn-mini:hover{background:rgba(255,255,255,.95);}
   .measure-tools-toggle{font-weight:600;color:var(--mf-blue-dark);}
   .measure-tools-toggle.open{background:var(--mf-blue);color:#fff;border-color:var(--mf-blue);}
-  #btnExtraToggle{font-weight:600;color:var(--mf-blue-dark);}
+  /* Nút "Mở rộng" tách riêng, neo GÓC TRÊN-PHẢI bản đồ (14/08/2026 theo yêu cầu, trước gộp chung
+     góc trái với ô tìm kiếm/Công cụ — nay tách ra cho rõ 2 nhóm chức năng khác nhau). */
+  .extra-tools{position:absolute;top:10px;right:10px;z-index:900;display:flex;flex-direction:column;gap:8px;max-width:220px;}
+  #btnExtraToggle{font-weight:600;color:var(--mf-blue-dark);align-self:flex-end;}
   #btnExtraToggle.open{background:var(--mf-blue);color:#fff;border-color:var(--mf-blue);}
-  /* 2 danh sách sổ ra rộng vừa phải, không kéo giãn cả thanh công cụ */
+  /* Danh sách sổ ra rộng vừa phải, không kéo giãn cả thanh công cụ */
   #measureBtns, #extraBtns{max-width:220px;}
   /* Danh sách công cụ khi sổ ra: gộp thành 1 khối liền sát nhau (không có khoảng cách giữa các nút) cho gọn,
      thay vì từng nút rời rạc có bóng đổ riêng — chỉ bo góc + đổ bóng ở khối ngoài cùng. */
@@ -284,8 +287,9 @@
   .st-rating{display:inline-block;margin-top:8px;padding:3px 11px;border-radius:12px;color:#fff;font-size:12px;font-weight:700;}
   @media (max-width:768px){
     .measure-tools{top:8px;left:8px;max-width:calc(100vw - 62px);}
+    .extra-tools{top:8px;right:8px;max-width:150px;}
     .measure-btns .tool-btn{padding:10px 12px;font-size:13px;min-height:40px;}
-    /* Màn hẹp thì cho ô tìm kiếm ăn trọn 1 dòng, 2 nút xuống dòng dưới thay vì bị bóp méo */
+    /* Màn hẹp thì cho ô tìm kiếm ăn trọn 1 dòng, nút Công cụ xuống dòng dưới thay vì bị bóp méo */
     .map-top-row{flex-wrap:wrap;}
     .map-top-row .map-search-wrap{flex:1 1 100%;}
   }
@@ -636,15 +640,6 @@
             <div class="map-search-results" id="mapSearchResults" style="display:none;"></div>
           </div>
           <button class="tool-btn tool-btn-mini measure-tools-toggle" id="btnMeasureToolsToggle" title="Công cụ đo đạc và đo sóng">🛠 Công cụ</button>
-          <button class="tool-btn tool-btn-mini" id="btnExtraToggle" title="Các tiện ích khác">➕ Mở rộng</button>
-        </div>
-        <!-- Danh sách tiện ích của nút "Mở rộng" -->
-        <div class="measure-btns" id="extraBtns" style="display:none;">
-          <button class="tool-btn" id="btnLocate">📍 Vị trí của tôi</button>
-          <button class="tool-btn" id="btnWeather">🌦 Thời tiết (Windy)</button>
-          <button class="tool-btn" id="btnFit">🗺 Xem toàn bộ</button>
-          <!-- Nút "Góp ý" — TẠM THỜI cho giai đoạn thử nghiệm/"Chỉ xem trước", XOÁ khi web chính thức đưa vào dùng thật -->
-          <button class="tool-btn tool-btn-feedback" id="btnFeedback">💬 Góp ý</button>
         </div>
         <div class="measure-btns" id="measureBtns" style="display:none;">
           <!-- "Sóng hiện tại" chuyển vào đây (trước là nút rời trong .map-tools) theo yêu cầu 06/08/2026. -->
@@ -680,6 +675,19 @@
           <div class="measure-panel-actions">
             <button class="btn btn-outline btn-sm" id="btnSpeedtestClose">Đóng</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Nút "Mở rộng" tách riêng, neo góc trên-phải bản đồ (14/08/2026 theo yêu cầu người dùng —
+           trước gộp chung góc trái với ô tìm kiếm/Công cụ, nay tách hẳn sang phải cho rõ 2 nhóm). -->
+      <div class="extra-tools" id="extraTools">
+        <button class="tool-btn tool-btn-mini" id="btnExtraToggle" title="Các tiện ích khác">➕ Mở rộng</button>
+        <div class="measure-btns" id="extraBtns" style="display:none;">
+          <button class="tool-btn" id="btnLocate">📍 Vị trí của tôi</button>
+          <button class="tool-btn" id="btnWeather">🌦 Thời tiết (Windy)</button>
+          <button class="tool-btn" id="btnFit">🗺 Xem toàn bộ</button>
+          <!-- Nút "Góp ý" — TẠM THỜI cho giai đoạn thử nghiệm/"Chỉ xem trước", XOÁ khi web chính thức đưa vào dùng thật -->
+          <button class="tool-btn tool-btn-feedback" id="btnFeedback">💬 Góp ý</button>
         </div>
       </div>
 
@@ -2335,8 +2343,12 @@ function siteZOffset(node){
 }
 function makeSiteMarker(node){
   const [lon,lat] = node.c;
+  // bubblingMouseEvents:false (14/08/2026) — BUG đã tìm ra: mặc định Leaflet cho click marker
+  // "nổi bọt" lên cả bản đồ, nên map.on('click', tachThuGon) phía dưới chạy NGAY sau tachBung()
+  // trong cùng 1 lượt xử lý sự kiện, thu icon vừa toả ra lại tức thì -> người dùng thấy như
+  // không có gì xảy ra. Tắt nổi bọt thì click marker chỉ còn chạy đúng các handler của marker.
   const m = L.marker([lat,lon], {icon:siteIconFor(node.g, node.ic), title:node.n, draggable:false,
-                                 zIndexOffset: siteZOffset(node)});
+                                 zIndexOffset: siteZOffset(node), bubblingMouseEvents:false});
   m._siteName = node.n;
   m._tenHien = node.n;
   m.bindPopup(() => buildSitePopup(m, node));
@@ -7048,7 +7060,9 @@ function fttxEnsureMarker(s){
   if(m) return m;
   const p = fttxPos(s);
   if(p.lat == null || p.lon == null) return null;
-  m = L.marker([p.lat, p.lon], {icon: fttxIcon(s), zIndexOffset: Z_FTTX});
+  // bubblingMouseEvents:false: lý do xem chú thích ở makeSiteMarker() — icon FTTx toè trùng vị trí
+  // (nhiều thuê bao chung địa chỉ) cũng bị đúng lỗi y hệt nếu không tắt nổi bọt sự kiện click.
+  m = L.marker([p.lat, p.lon], {icon: fttxIcon(s), zIndexOffset: Z_FTTX, bubblingMouseEvents:false});
   m.bindPopup(() => buildFttxPopup(s), {maxWidth: 330, minWidth: 265});
   m.on('click', () => tachBung(m));
   m._fttx = s;
@@ -7267,10 +7281,18 @@ function buildFttxPopup(s){
 function fttxInfoHtml(s){
   const g = fttxGeoInfo(s.at);
   const p = fttxPos(s);
-  // 2 trường NV vận hành: Form 3 đang trống 100% -> hiện rõ "(chưa phân công)" thay vì để trắng,
-  // để người dùng biết là thiếu dữ liệu chứ không phải lỗi hiển thị (chốt với anh Nam 06/08/2026).
-  const nvvh = s.nvvh || '<span style="color:#a05a00">(chưa phân công)</span>';
-  const sdtvh = s.sdtvh || '<span style="color:#a05a00">(chưa phân công)</span>';
+  // Sửa 14/08/2026 theo yêu cầu anh Nam, đã đối chiếu lại với file Form 3 đầy đủ (1159 dòng,
+  // anh Nam gửi lại cùng ngày) để xác nhận đúng cột thật — KHÔNG đoán theo tên biến cũ:
+  //  - "USER" trước đây trỏ nhầm vào trường rỗng "sdtvh" (chưa từng có dữ liệu) -> nay lấy đúng
+  //    Cột F "USER" = trường 's.us' (đã verify: F1="USER", giá trị mẫu "yen9688084745").
+  //  - Trường 's.tnv' (trước gắn nhãn sai "NV phát triển TB") thực ra CHÍNH LÀ dữ liệu Cột AB
+  //    "TÊN NHÂN VIÊN" (đã verify bằng cách đọc thẳng file Excel: AB28="TÊN NHÂN VIÊN", giá trị
+  //    mẫu "Nguyễn Tiến Dũng" — khớp 100% với s.tnv của cùng dòng). Cột AC "ĐẠI LÝ PHÁT TRIỂN
+  //    THUÊ BAO" (cột generic gần tên "NV phát triển TB" cũ) trống 100% trong dữ liệu thật, nên
+  //    không phải nguồn của s.tnv. Vậy chỉ cần đổi TÊN NHÃN cho đúng, KHÔNG cần trích cột mới.
+  //  - Bỏ hẳn dòng "Cửa hàng" (s.ch, = Cột Z "TÊN CỬA HÀNG") khỏi popup theo yêu cầu.
+  const us = s.us || '<span style="color:#a05a00">(chưa có dữ liệu)</span>';
+  const tenNv = s.tnv || '<span style="color:#a05a00">(chưa có dữ liệu)</span>';
   return `<table class="info-table">
       ${fttxRow('Tên thuê bao', s.ten)}
       ${fttxRow('Mã khách hàng', s.ma)}
@@ -7283,10 +7305,8 @@ function fttxInfoHtml(s){
       ${fttxRow('Chặn cắt', s.cc)}
       ${fttxRow('Ngày đấu nối', (s.dn||'').split(' ')[0])}
       ${fttxRow('Hết hạn gói', (s.nkt||'').split(' ')[0])}
-      <tr><td>Tên nhân viên</td><td>${nvvh}</td></tr>
-      <tr><td>USER</td><td>${sdtvh}</td></tr>
-      ${fttxRow('NV phát triển TB', s.tnv)}
-      ${fttxRow('Cửa hàng', s.ch)}
+      <tr><td>USER</td><td>${us}</td></tr>
+      <tr><td>Tên nhân viên</td><td>${tenNv}</td></tr>
     </table>
     <div class="small-note" style="margin-top:6px;">Độ tin cậy toạ độ: <b style="color:${g.color}">${g.label}</b>${p.moved ? ' · <b style="color:#7b3fb5">đã sửa tại chỗ, chờ duyệt</b>' : ''}</div>
     ${g.rough && !p.moved ? '<div class="small-note" style="color:#a05a00;">⚠ Toạ độ này chỉ định vị được tới cấp xã — nên đi thực địa rồi bấm "Sửa toạ độ" để chỉnh cho đúng.</div>' : ''}`;

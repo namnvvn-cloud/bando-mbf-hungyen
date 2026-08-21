@@ -580,6 +580,23 @@
         <div id="fttxSearchResults" class="sub-search-results"></div>
         <div id="fttxTree" class="tree-box"></div>
       </div>
+      <!-- ===== Bản đồ checkin — NVKD (GĐ11 21/08/2026) =====
+           Cây Vùng→Nhân viên lấy từ roster QLNVKD (Form 8, xem tab Admin "QLNVKD"), chấm hiện trên bản đồ
+           là các lần CHECK-IN VỊ TRÍ (nút "✅ Check in" ở chấm GPS "Vị trí của tôi") — KHÁC lớp check-in
+           trạm. Dữ liệu định vị nhân sự khá nhạy cảm nên mục này CHỈ hiện cho vai trò admin
+           (qlnvkdApplySidebarVisibility, gọi trong applyAuthUI). -->
+      <div class="sec" id="secCheckinMap" style="display:none;">
+        <h3>Bản đồ checkin <span class="cnt" id="cnt_checkin_map">0</span></h3>
+        <div class="flt-row" style="gap:6px;">
+          <input id="checkinMapSearchBox" placeholder="🔍 Tìm tên nhân viên..." autocomplete="off" style="flex:1;">
+          <button type="button" class="btn btn-outline btn-sm" id="btnCheckinMapDate" title="Chọn ngày check-in">📅 Ngày</button>
+        </div>
+        <div id="checkinMapSearchResults" class="sub-search-results"></div>
+        <input type="date" id="checkinMapDateInput" style="display:none;margin-top:6px;width:100%;">
+        <div id="checkinMapDateChips" class="flt-chips"></div>
+        <div id="checkinMapTree" class="tree-box" style="margin-top:6px;"></div>
+        <div class="small-note" id="checkinMapDemoNote" style="margin-top:6px;"></div>
+      </div>
       <div class="sec">
         <h3>Lớp khác</h3>
         <div class="layer-row"><input type="checkbox" id="ly_boundary"><span class="swatch" style="background:#1a9e5c"></span> Ranh giới xã (<span id="cnt_boundary">0</span>)</div>
@@ -1020,6 +1037,7 @@
         <button data-admintab="all">📚 Toàn bộ lịch sử</button>
         <button data-admintab="users">👤 Quản lý người dùng</button>
         <button data-admintab="thongke">📊 Thống kê sử dụng</button>
+        <button data-admintab="qlnvkd">👥 QLNVKD</button>
         <button data-admintab="gopy">💬 Góp ý <span class="subnav-dot" id="dot_gopy" style="display:none;"></span></button>
         <button data-admintab="ie">📦 Import/Export dữ liệu</button>
       </div>
@@ -1157,6 +1175,49 @@
               </table>
             </div>
             <div class="small-note" style="margin-top:8px;">File xuất ra gồm 2 phần: bảng tổng hợp ở trên, và danh sách chi tiết theo Số TT · Tên trạm · Tên user đã check in · Ngày check in · Giờ check in.</div>
+          </div>
+        </div>
+
+        <!-- ================= QLNVKD — QUẢN LÝ NHÂN VIÊN KINH DOANH (GĐ11 21/08/2026) =================
+             Roster nhập từ "Form 8. Mau thong ke Nhan Vien Kinh Doanh" + đếm số lần CHECK-IN VỊ TRÍ
+             (khối JS "CHECK-IN VỊ TRÍ — NHÂN VIÊN KINH DOANH") — tính năng NÀY KHÁC check-in trạm
+             ở tab "Thống kê sử dụng" phía trên (check-in trạm gắn với 1 trạm CSHT cụ thể, ≤50m). -->
+        <div class="page-inner" id="adminQlnvkdBody">
+          <div class="banner banner-info" style="margin:0 0 16px;">👥 Quản lý Nhân viên kinh doanh (NVKD) — theo dõi số lần <b>check-in vị trí</b> khi NVKD đi gặp khách hàng (không gắn trạm, không giới hạn khoảng cách — khác check-in trạm). Import danh sách từ Form 8 sẽ đồng thời cấp tài khoản đăng nhập (vai trò <b>viewer</b>, mật khẩu mặc định <code>123456</code>) cho người chưa có tài khoản — check-in bắt buộc đăng nhập.</div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <h3 style="margin:0 0 8px;">📥 Import danh sách NVKD (Form 8)</h3>
+            <div class="small-note" style="margin-bottom:8px;">File Excel (.xlsx) cần có cột: <b>Họ tên, SĐT, Email, Chức danh, Vùng quản lý</b> (không phân biệt hoa/thường, ở dòng đầu tiên — đúng cấu trúc Form 8). Trùng Email với người đã có trong danh sách sẽ CẬP NHẬT lại thông tin, không tạo trùng dòng. Cột "Vùng quản lý" dùng làm cả cột "Tổ" trong bảng tổng hợp và folder "Vùng" ở lớp "Bản đồ checkin".</div>
+            <input type="file" id="qlnvkdImportFile" accept=".xlsx,.xls" style="margin-bottom:8px;">
+            <div><button class="btn btn-outline btn-sm" id="btnQlnvkdImportPreview">👁 Xem trước file</button> <button class="btn btn-primary btn-sm" id="btnQlnvkdImportConfirm" style="display:none;">✅ Xác nhận nhập danh sách</button></div>
+            <div id="qlnvkdImportBanner"></div>
+            <div style="overflow-x:auto;margin-top:8px;">
+              <table class="data-table" id="qlnvkdImportTable" style="display:none;">
+                <thead><tr><th>Họ tên</th><th>SĐT</th><th>Email</th><th>Chức danh</th><th>Vùng quản lý</th></tr></thead>
+                <tbody id="qlnvkdImportTableBody"></tbody>
+              </table>
+            </div>
+            <div style="overflow-x:auto;margin-top:8px;">
+              <table class="data-table" id="qlnvkdImportResultTable" style="display:none;">
+                <thead><tr><th>Họ tên</th><th>Email</th><th>Username</th><th>Mật khẩu</th><th>Gửi Email</th></tr></thead>
+                <tbody id="qlnvkdImportResultTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="filter-row" style="flex-wrap:wrap;align-items:flex-end;">
+              <div class="fitem" style="flex:1;min-width:220px;"><label>Tìm trong danh sách</label><input id="qlnvkdQ" placeholder="Họ tên, Username hoặc Tổ..."></div>
+              <div class="fitem"><button class="btn btn-outline btn-sm" id="btnQlnvkdRefresh">🔄 Tải lại</button></div>
+              <div class="fitem"><button class="btn btn-primary btn-sm" id="btnQlnvkdExport">⬇ Xuất Excel (2 sheet)</button></div>
+            </div>
+            <div style="overflow-x:auto;max-height:60vh;overflow-y:auto;margin-top:8px;">
+              <table class="data-table" id="qlnvkdSummaryTable">
+                <thead><tr><th>STT</th><th>Username</th><th>Họ tên</th><th>Tổ</th><th class="th-num">Checkin ngày</th><th class="th-num">Checkin tuần</th><th class="th-num">Checkin tháng</th><th class="th-num">Checkin năm</th></tr></thead>
+                <tbody id="qlnvkdSummaryTableBody"><tr><td colspan="8" class="empty-row">Chưa tải danh sách.</td></tr></tbody>
+              </table>
+            </div>
+            <div class="small-note" style="margin-top:8px;">Bộ đếm tính theo lịch: hôm nay / tuần này (Thứ 2→Chủ nhật) / tháng này / năm này. File xuất gồm 2 sheet: <b>Tong_hop</b> (đúng bảng trên) và <b>Chi_tiet_checkin</b> (từng lần check-in: thời gian, toạ độ, địa chỉ, sai số GPS).</div>
           </div>
         </div>
 
@@ -1684,6 +1745,9 @@ function applyAuthUI(){
   // Chuông thông báo — chỉ admin (GĐ6 07/08/2026). Gọi trong try/catch vì applyAuthUI() chạy rất sớm
   // lúc khôi phục phiên từ localStorage, có thể trước khi khối chuông kịp định nghĩa hàm.
   try{ if(typeof applyBellVisibility === 'function') applyBellVisibility(); }catch(e){}
+  // Nạp roster QLNVKD từ backend (chỉ admin, GĐ11 21/08/2026) — cùng lý do try/catch như trên.
+  try{ if(typeof qlnvkdLoadFromBackend === 'function') qlnvkdLoadFromBackend(); }catch(e){}
+  try{ if(typeof qlnvkdApplySidebarVisibility === 'function') qlnvkdApplySidebarVisibility(); }catch(e){}
   const nameInput = document.getElementById('curUserName'), phoneInput = document.getElementById('curUserPhone');
   if(loggedIn && (a.role==='editor' || a.role==='admin')){
     CONFIG.currentUser.name = a.hoTen || a.username;
@@ -3086,19 +3150,147 @@ setupDismissableList(document.getElementById('fltValue'), document.getElementByI
   () => document.getElementById('fltResults').classList.contains('open'),
   () => document.getElementById('fltResults').classList.remove('open'));
 
+/* ============================================================================
+   CHECK-IN VỊ TRÍ — NHÂN VIÊN KINH DOANH (GĐ11 21/08/2026)
+
+   KHÁC với "Check in tại trạm" ở khối "CHECK IN TẠI TRẠM" phía trên (gắn với 1 trạm
+   CSHT cụ thể, bắt buộc khoảng cách <=50m để chống bấm khống). Check-in này dành cho
+   NVKD đi gặp khách hàng ở ĐỊA ĐIỂM BẤT KỲ — không có toạ độ "chuẩn" nào để so khoảng
+   cách nên KHÔNG áp ràng buộc khoảng cách/độ chính xác GPS (đã chốt với anh Nam
+   21/08/2026) — chỉ ghi kèm sai số GPS để hậu kiểm nếu cần. Bấm vào chấm tròn xanh
+   "Vị trí của tôi" sẽ hiện nút "✅ Check in".
+
+   Đặt tên sheet/action RIÊNG (QLNVKD, CheckinNVKD, checkin_nvkd_submit) — KHÔNG đụng
+   vào sheet "CheckIn"/action "checkin_station" của tính năng check-in trạm đã có.
+   ============================================================================ */
+const checkinNvkdLocal = [];  // DEMO — chưa nối backend thật, bản ghi chỉ nằm trong máy này
+try{ JSON.parse(localStorage.getItem('mbf_checkins_nvkd') || '[]').forEach(x => checkinNvkdLocal.push(x)); }catch(e){}
+function checkinNvkdSaveLocal(){
+  try{ localStorage.setItem('mbf_checkins_nvkd', JSON.stringify(checkinNvkdLocal.slice(-1000))); }catch(e){}
+}
+// Roster QLNVKD (nhân viên kinh doanh, nhập từ Form 8) — nạp từ backend thật khi có,
+// hoặc từ bản import DEMO lưu tạm trong máy khi chưa nối backend. Dùng để tra Vùng/SĐT
+// theo username lúc check-in, và để dựng cây Vùng→Nhân viên ở lớp "Bản đồ checkin".
+let qlnvkdRoster = [];
+try{ qlnvkdRoster = JSON.parse(localStorage.getItem('mbf_qlnvkd_roster') || '[]'); }catch(e){}
+function qlnvkdSaveRosterLocal(){ try{ localStorage.setItem('mbf_qlnvkd_roster', JSON.stringify(qlnvkdRoster)); }catch(e){} }
+function qlnvkdFindByUsername(username){
+  return qlnvkdRoster.find(r => String(r.username||'').toLowerCase() === String(username||'').toLowerCase());
+}
+function qlnvkdLoadFromBackend(){
+  if(!CONFIG.API_URL || !CONFIG.auth || !CONFIG.auth.token || CONFIG.auth.role !== 'admin') return;
+  authApiPost('qlnvkd_list', {token: CONFIG.auth.token}).then(d => {
+    if(d && d.ok && Array.isArray(d.items)){ qlnvkdRoster = d.items; qlnvkdSaveRosterLocal(); if(typeof renderCheckinMapTree==='function') renderCheckinMapTree(); }
+  });
+}
+/** Reverse-geocode toạ độ -> chuỗi "thôn/xóm - phường/xã - tỉnh" qua Nominatim (OpenStreetMap,
+    CÙNG nguồn miễn phí đang dùng cho ô tìm địa chỉ trên bản đồ — không phải Google Maps API).
+    Mất mạng/timeout thì trả về null — web KHÔNG chặn check-in vì lỗi này, vẫn ghi toạ độ,
+    chỉ thiếu phần địa chỉ chữ (đúng tinh thần báo lỗi rõ nguyên nhân, không bịa dữ liệu). */
+async function reverseGeocodeDiaChi(lat, lon){
+  try{
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=vi&zoom=18&addressdetails=1`, {signal: ctl.signal, headers:{'Accept-Language':'vi'}});
+    clearTimeout(timer);
+    const d = await r.json();
+    if(!d || !d.address) return null;
+    const a = d.address;
+    const thon = a.hamlet || a.village || a.residential || a.neighbourhood || '';
+    const xaPhuong = a.suburb || a.quarter || a.commune || a.city_district || a.town || (thon ? '' : a.village) || '';
+    const tinh = a.state || a.province || '';
+    const parts = [thon, xaPhuong, tinh].filter(Boolean);
+    return parts.length ? parts.join(' - ') : (d.display_name || null);
+  }catch(e){ return null; }
+}
+function renderCheckinNvkdPanel(panelEl){
+  if(!CONFIG.auth || !CONFIG.auth.token){
+    panelEl.innerHTML = '<div class="small-note">🔒 Cần đăng nhập mới check in được — bấm "Đăng nhập" ở góc trên bên phải.</div>';
+    return;
+  }
+  panelEl.innerHTML = `
+    <div class="ci2-status" style="font-size:12.5px;padding:6px 8px;border-radius:6px;background:var(--mf-bg);margin-bottom:6px;">Chưa lấy vị trí.</div>
+    <button type="button" class="btn btn-outline btn-block btn-sm ci2-locate">📡 Lấy vị trí hiện tại</button>
+    <button type="button" class="btn btn-primary btn-block btn-sm ci2-do" style="margin-top:6px;" disabled>✅ Xác nhận check in</button>
+    <div class="ci2-banner"></div>`;
+  const st = panelEl.querySelector('.ci2-status');
+  const btnDo = panelEl.querySelector('.ci2-do');
+  const banner = panelEl.querySelector('.ci2-banner');
+  let fix = null;
+  panelEl.querySelector('.ci2-locate').onclick = () => {
+    st.textContent = 'Đang lấy vị trí…';
+    btnDo.disabled = true;
+    if(!navigator.geolocation){ st.textContent = '⚠ Trình duyệt không hỗ trợ định vị.'; return; }
+    navigator.geolocation.getCurrentPosition(pos => {
+      const c = pos.coords;
+      fix = {lat: c.latitude, lon: c.longitude, acc: Math.round(c.accuracy || 0)};
+      st.innerHTML = `📍 ${fix.lat.toFixed(6)}, ${fix.lon.toFixed(6)} · sai số GPS ±${fix.acc} m`;
+      btnDo.disabled = false;
+    }, err => {
+      st.textContent = '⚠ Không lấy được vị trí: ' + err.message;
+      btnDo.disabled = true;
+    }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0});
+  };
+  btnDo.onclick = async () => {
+    if(!fix) return;
+    btnDo.disabled = true;
+    const origText = btnDo.textContent;
+    btnDo.textContent = '⏳ Đang xác định địa chỉ...';
+    const diaChi = await reverseGeocodeDiaChi(fix.lat, fix.lon);
+    btnDo.textContent = origText;
+    const roster = qlnvkdFindByUsername(CONFIG.auth.username);
+    const thoiGian = new Date().toISOString();
+    const payload = { token: CONFIG.auth.token, lat: fix.lat, lon: fix.lon, doChinhXac: fix.acc, diaChi: diaChi || '', thoiGian };
+    authApiPost('checkin_nvkd_submit', payload).then(d => {
+      const rec = {
+        thoiGian, username: CONFIG.auth.username, hoTen: CONFIG.auth.hoTen || '',
+        sdt: (roster && roster.sdt) || CONFIG.auth.sdt || '', vung: (roster && roster.vung) || '',
+        lat: fix.lat, lon: fix.lon, doChinhXac: fix.acc, diaChi: diaChi || ''
+      };
+      checkinNvkdLocal.push(rec); checkinNvkdSaveLocal();
+      banner.innerHTML = (d && d.ok)
+        ? '<div class="banner banner-ok">✅ Đã ghi nhận check in' + (diaChi ? ' tại ' + diaChi : '') + '.</div>'
+        : '<div class="banner banner-warn">⚠ Chưa kết nối backend thật — đã ghi tạm trong máy này' + (diaChi ? ' (' + diaChi + ')' : '') + ', chưa vào bảng QLNVKD chung.</div>';
+    });
+  };
+}
+
 /* ============ TOOLBAR ============ */
 document.getElementById('btnFit').onclick = () => map.fitBounds(boundaryLayer.getBounds());
 /* "Vị trí của tôi" (GĐ4d 06/08/2026): zoom gần thêm 2 nấc so với mức đang xem (thay vì nhảy thẳng tới maxZoom cố định),
-   và vẽ chấm tròn xanh + vòng tròn sai số kiểu Google Maps thay vì để marker mặc định Leaflet. */
+   và vẽ chấm tròn xanh + vòng tròn sai số kiểu Google Maps thay vì để marker mặc định Leaflet.
+   GĐ11 21/08/2026: chấm tròn này giờ có popup với nút "✅ Check in" (check-in vị trí NVKD, xem khối
+   CHECK-IN VỊ TRÍ — NHÂN VIÊN KINH DOANH phía trên) — bubblingMouseEvents:false để tránh đúng bug
+   "click nổi bọt lên map" đã gặp với marker trạm/FTTx (SOP mục 3.2). */
 let myLocationLayer = null;
+// Pane riêng cho chấm GPS, z-index CAO HƠN markerPane mặc định (600) — nếu không, khi vị trí thật
+// trùng/gần 1 trạm CSHT, marker trạm (nằm ở markerPane) sẽ luôn "đè" lên chấm tròn (circleMarker ở
+// overlayPane, z-index 400 mặc định) và NHẬN click trước, khiến bấm mãi không ra được nút Check in.
+// Phát hiện khi viết test Playwright (test_v_checkin_nvkd.py) — click thật vào toạ độ trùng trạm
+// "HYN_HYN_HONG_NAM_2" mở nhầm popup trạm thay vì popup Check in.
+if(!map.getPane('myLocationPane')){
+  map.createPane('myLocationPane');
+  map.getPane('myLocationPane').style.zIndex = 650;
+}
 document.getElementById('btnLocate').onclick = () => {
   const targetZoom = Math.min(19, map.getZoom() + 2);
   map.locate({setView:false, enableHighAccuracy:true});
   map.once('locationfound', (e) => {
     if(myLocationLayer) map.removeLayer(myLocationLayer);
+    const dot = L.circleMarker(e.latlng, {radius:8, color:'#fff', weight:3, fillColor:'#4285F4', fillOpacity:1, bubblingMouseEvents:false, pane:'myLocationPane'});
+    dot.bindPopup(() => {
+      const div = document.createElement('div');
+      div.className = 'edit-form';
+      div.style.minWidth = '220px';
+      div.innerHTML = `<b>📍 Vị trí của tôi</b>
+        <div class="small-note" style="margin:6px 0 8px;">${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}</div>
+        <div class="checkin-nvkd-panel"></div>`;
+      renderCheckinNvkdPanel(div.querySelector('.checkin-nvkd-panel'));
+      return div;
+    });
     myLocationLayer = L.layerGroup([
       L.circle(e.latlng, {radius:e.accuracy, color:'#4285F4', weight:1, opacity:.4, fillColor:'#4285F4', fillOpacity:.12}),
-      L.circleMarker(e.latlng, {radius:8, color:'#fff', weight:3, fillColor:'#4285F4', fillOpacity:1})
+      dot
     ]).addTo(map);
     map.setView(e.latlng, targetZoom);
   });
@@ -6129,16 +6321,18 @@ document.querySelectorAll('#adminWrap .subnav button').forEach(btn=>{
     document.querySelectorAll('#adminWrap .subnav button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const t = btn.dataset.admintab;
-    const PANELS = ['users', 'ie', 'thongke', 'gopy'];   // các tab có khung riêng, phần còn lại dùng chung #adminBody
+    const PANELS = ['users', 'ie', 'thongke', 'gopy', 'qlnvkd'];   // các tab có khung riêng, phần còn lại dùng chung #adminBody
     document.getElementById('adminBody').classList.toggle('active', PANELS.indexOf(t) < 0);
     document.getElementById('adminUsersBody').classList.toggle('active', t === 'users');
     document.getElementById('adminIeBody').classList.toggle('active', t === 'ie');
     document.getElementById('adminStatsBody').classList.toggle('active', t === 'thongke');
     document.getElementById('adminGopYBody').classList.toggle('active', t === 'gopy');
+    document.getElementById('adminQlnvkdBody').classList.toggle('active', t === 'qlnvkd');
     if(t === 'users'){ renderUsersTable(); renderPendingRegistrations(); }
     else if(t === 'ie'){ loadImportBatches(); loadFttxBatches(); }
     else if(t === 'thongke'){ loadUsageStats(); }
     else if(t === 'gopy'){ loadFeedback(); }
+    else if(t === 'qlnvkd'){ qlnvkdLoadFromBackend(); qlnvkdRenderSummaryTable(); }
     else { adminFilterStatus = t === 'all' ? 'all' : 'cho_duyet'; renderAdminTable(); }
   });
 });
@@ -6348,7 +6542,11 @@ document.getElementById('btnApproveAllPending').onclick = () => {
 
 /* ---- Import Excel hàng loạt (mục 3) ---- */
 let importUsersParsed = [];
-function normHeaderKey_(s){ return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+/* GĐ11 21/08/2026: "đ/Đ" tiếng Việt là 1 CHỮ CÁI RIÊNG trong Unicode (U+0111/U+0110), KHÔNG phải
+   tổ hợp "d" + dấu nên .normalize('NFD') không tách được — cột "SĐT" từng bị đọc thành "sđt" (còn
+   dấu đ) không khớp alias "sdt" khi import Form 8 (SĐT luôn đọc ra rỗng). Thêm .replace(/đ/g,'d')
+   trước khi NFD để xử lý đúng cả 2 trường hợp. */
+function normHeaderKey_(s){ return String(s||'').trim().toLowerCase().replace(/đ/g,'d').normalize('NFD').replace(/[̀-ͯ]/g,''); }
 document.getElementById('btnImportUsersPreview').onclick = () => {
   const banner = document.getElementById('importUsersBanner');
   const fileInput = document.getElementById('importUsersFile');
@@ -6397,6 +6595,134 @@ document.getElementById('btnImportUsersConfirm').onclick = () => {
       banner.innerHTML = `<div class="banner banner-warn">⚠ ${(d&&d.error)||'Không cấp được tài khoản.'}</div>`;
     }
   });
+};
+
+/* ============================================================================
+   IMPORT / TỔNG HỢP / XUẤT DỮ LIỆU QLNVKD (GĐ11 21/08/2026) — nguồn Form 8, dùng chung
+   qlnvkdRoster/checkinNvkdLocal với khối JS "CHECK-IN VỊ TRÍ — NHÂN VIÊN KINH DOANH" ở trên.
+   ============================================================================ */
+function fmtPhoneClient_(v){
+  let s = String(v||'').trim().replace(/\.0$/, '');
+  if(/^\d+$/.test(s) && s.charAt(0) !== '0' && s.length === 9) s = '0' + s; // Excel lưu SĐT dạng số làm mất số 0 đầu
+  return s;
+}
+let qlnvkdImportParsed = [];
+document.getElementById('btnQlnvkdImportPreview').onclick = () => {
+  const banner = document.getElementById('qlnvkdImportBanner');
+  const fileInput = document.getElementById('qlnvkdImportFile');
+  const file = fileInput.files && fileInput.files[0];
+  if(!file){ banner.innerHTML = '<div class="banner banner-warn">Chọn file Excel trước.</div>'; return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!rows.length){ banner.innerHTML = '<div class="banner banner-warn">File không có dữ liệu.</div>'; return; }
+      const keys = Object.keys(rows[0]);
+      const findKey = (opts) => keys.find(k => opts.includes(normHeaderKey_(k)));
+      const kHoTen = findKey(['ho ten','hoten','ten','ho va ten']);
+      const kSdt = findKey(['sdt','so dien thoai','dien thoai','phone']);
+      const kEmail = findKey(['email']);
+      const kChucDanh = findKey(['chuc danh']);
+      const kVung = findKey(['vung quan ly','vung']);
+      const kPhuongXa = keys.find(k => normHeaderKey_(k).indexOf('phuong') >= 0 && normHeaderKey_(k).indexOf('quan ly') >= 0);
+      if(!kHoTen || !kEmail){ banner.innerHTML = '<div class="banner banner-warn">File cần có ít nhất cột "Họ tên" và "Email" (đúng cấu trúc Form 8).</div>'; return; }
+      qlnvkdImportParsed = rows.map(r => ({
+        hoTen: String(r[kHoTen]||'').trim(), sdt: fmtPhoneClient_(r[kSdt]), email: String(r[kEmail]||'').trim().toLowerCase(),
+        chucDanh: kChucDanh ? String(r[kChucDanh]||'').trim() : '', vung: kVung ? String(r[kVung]||'').trim() : '',
+        phuongXa: kPhuongXa ? String(r[kPhuongXa]||'').trim() : ''
+      })).filter(r => r.hoTen && r.email);
+      if(!qlnvkdImportParsed.length){ banner.innerHTML = '<div class="banner banner-warn">Không đọc được dòng nào hợp lệ (cần Họ tên + Email).</div>'; return; }
+      document.getElementById('qlnvkdImportTable').style.display = 'table';
+      document.getElementById('qlnvkdImportTableBody').innerHTML = qlnvkdImportParsed.map(r => `<tr><td>${r.hoTen}</td><td>${r.sdt||'-'}</td><td>${r.email}</td><td>${r.chucDanh||'-'}</td><td>${r.vung||'-'}</td></tr>`).join('');
+      document.getElementById('btnQlnvkdImportConfirm').style.display = 'inline-block';
+      banner.innerHTML = `<div class="banner banner-info">Đọc được ${qlnvkdImportParsed.length} dòng hợp lệ — kiểm tra lại rồi bấm "Xác nhận nhập danh sách".</div>`;
+    }catch(err){
+      banner.innerHTML = `<div class="banner banner-warn">⚠ Không đọc được file: ${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+};
+document.getElementById('btnQlnvkdImportConfirm').onclick = () => {
+  if(!requireAdmin('nhập danh sách NVKD')) return;
+  if(!qlnvkdImportParsed.length) return;
+  const banner = document.getElementById('qlnvkdImportBanner');
+  banner.innerHTML = '<div class="small-note">Đang nhập danh sách...</div>';
+  authApiPost('qlnvkd_import', {token: CONFIG.auth.token, items: qlnvkdImportParsed}).then(d => {
+    if(d && d.ok){
+      document.getElementById('qlnvkdImportResultTable').style.display = 'table';
+      document.getElementById('qlnvkdImportResultTableBody').innerHTML = d.results.map(r => `<tr><td>${r.hoTen}</td><td>${r.email}</td><td>${r.username||'-'}</td><td>${r.password||(r.existed?'(giữ nguyên)':'-')}</td><td>${r.sent?'✅':(r.existed?'—':'⚠')}</td></tr>`).join('');
+      banner.innerHTML = `<div class="banner banner-ok">✅ Đã nhập ${d.results.length} dòng vào QLNVKD.</div>`;
+      document.getElementById('btnQlnvkdImportConfirm').style.display = 'none';
+      qlnvkdImportParsed = [];
+      qlnvkdLoadFromBackend();
+      qlnvkdRenderSummaryTable();
+    } else {
+      // DEMO — chưa nối backend thật: vẫn nạp roster tạm vào máy này để xem trước toàn bộ luồng
+      // (cây Vùng→Nhân viên ở lớp "Bản đồ checkin", tra Vùng lúc check-in) trước khi có backend thật.
+      qlnvkdImportParsed.forEach(item => {
+        const idx = qlnvkdRoster.findIndex(r => r.email === item.email);
+        const rec = Object.assign({username: item.email.split('@')[0]}, item);
+        if(idx >= 0) qlnvkdRoster[idx] = Object.assign({}, qlnvkdRoster[idx], rec); else qlnvkdRoster.push(rec);
+      });
+      qlnvkdSaveRosterLocal();
+      banner.innerHTML = `<div class="banner banner-warn">⚠ ${(d&&d.error)||'Chưa kết nối backend thật'} — đã nạp tạm ${qlnvkdImportParsed.length} dòng vào máy này để xem trước (CHƯA cấp tài khoản đăng nhập thật, chưa ghi vào Google Sheet).</div>`;
+      document.getElementById('btnQlnvkdImportConfirm').style.display = 'none';
+      qlnvkdImportParsed = [];
+      qlnvkdRenderSummaryTable();
+      if(typeof renderCheckinMapTree === 'function') renderCheckinMapTree();
+    }
+  });
+};
+function qlnvkdCountsFor_(username){
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = (now.getDay() + 6) % 7; // Thứ 2 = 0 ... Chủ nhật = 6 (tuần ISO)
+  const startOfWeek = new Date(startOfDay.getTime() - dow*86400000);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  let ngay=0, tuan=0, thang=0, nam=0;
+  checkinNvkdLocal.forEach(c => {
+    if(String(c.username||'').toLowerCase() !== String(username||'').toLowerCase()) return;
+    const t = new Date(c.thoiGian);
+    if(t >= startOfDay) ngay++;
+    if(t >= startOfWeek) tuan++;
+    if(t >= startOfMonth) thang++;
+    if(t >= startOfYear) nam++;
+  });
+  return {ngay, tuan, thang, nam};
+}
+function qlnvkdRenderSummaryTable(){
+  const tb = document.getElementById('qlnvkdSummaryTableBody');
+  const q = (document.getElementById('qlnvkdQ').value || '').trim().toLowerCase();
+  let rows = qlnvkdRoster.slice();
+  if(q) rows = rows.filter(r => [r.hoTen, r.username, r.vung].some(v => String(v||'').toLowerCase().includes(q)));
+  if(!rows.length){ tb.innerHTML = '<tr><td colspan="8" class="empty-row">Chưa có danh sách NVKD — import Form 8 ở trên.</td></tr>'; return; }
+  tb.innerHTML = rows.map((r, i) => {
+    const c = qlnvkdCountsFor_(r.username);
+    return `<tr><td>${i+1}</td><td>${r.username||'-'}</td><td>${r.hoTen||'-'}</td><td>${r.vung||'-'}</td><td class="th-num">${c.ngay}</td><td class="th-num">${c.tuan}</td><td class="th-num">${c.thang}</td><td class="th-num">${c.nam}</td></tr>`;
+  }).join('');
+}
+document.getElementById('qlnvkdQ').addEventListener('input', qlnvkdRenderSummaryTable);
+document.getElementById('btnQlnvkdRefresh').onclick = () => { qlnvkdLoadFromBackend(); qlnvkdRenderSummaryTable(); };
+document.getElementById('btnQlnvkdExport').onclick = () => {
+  if(!qlnvkdRoster.length){ alert('Chưa có danh sách NVKD để xuất.'); return; }
+  const doExport = (detailRows) => {
+    const summaryAoa = [['STT','Username','Họ tên','Tổ','Checkin ngày','Checkin tuần','Checkin tháng','Checkin năm']]
+      .concat(qlnvkdRoster.map((r,i) => { const c = qlnvkdCountsFor_(r.username); return [i+1, r.username||'', r.hoTen||'', r.vung||'', c.ngay, c.tuan, c.thang, c.nam]; }));
+    const detailAoa = [['Thời gian','Username','Họ tên','SĐT','Tổ/Vùng','Địa chỉ','Lat','Lon','Sai số GPS (m)']]
+      .concat(detailRows.map(c => [c.thoiGian, c.username||'', c.hoTen||'', c.sdt||'', c.vung||'', c.diaChi||'', c.lat, c.lon, c.doChinhXac]));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryAoa), 'Tong_hop');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detailAoa), 'Chi_tiet_checkin');
+    XLSX.writeFile(wb, 'QLNVKD_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  };
+  if(CONFIG.API_URL && CONFIG.auth && CONFIG.auth.token){
+    authApiPost('qlnvkd_checkins', {token: CONFIG.auth.token}).then(d => doExport((d && d.ok && d.items) ? d.items : checkinNvkdLocal));
+  } else {
+    doExport(checkinNvkdLocal);
+  }
 };
 
 /* ============================================================================
@@ -7239,6 +7565,178 @@ document.getElementById('cableSearchBox').addEventListener('input', function(){
     d.onclick = () => jumpToLeaf(r.id, 'cable', r.node);
     box.appendChild(d);
   });
+});
+
+/* ============================================================================
+   BẢN ĐỒ CHECKIN — NVKD (GĐ11 21/08/2026)
+   Cây Vùng→Nhân viên (roster qlnvkdRoster, xem tab Admin "QLNVKD") + lọc theo ngày (chip nhiều ngày).
+   Điểm hiện trên bản đồ là CHECK-IN VỊ TRÍ (chấm GPS "Vị trí của tôi", khối JS "CHECK-IN VỊ TRÍ —
+   NHÂN VIÊN KINH DOANH") — gộp dữ liệu backend thật (checkinMapLoadBackend) + bản ghi DEMO cục bộ
+   (checkinNvkdLocal), xem checkinMapAllRecords(). CHỈ dựng/hiện khi role=admin (dữ liệu định vị nhân
+   sự khá nhạy cảm) — qlnvkdApplySidebarVisibility() được gọi trong applyAuthUI().
+   ============================================================================ */
+let checkinMapLayer = null;
+let checkinNvkdBackendCache = [];
+const checkinMapSelectedNv = new Set();     // username (lowercase) đang tick trong cây
+const checkinMapSelectedDates = new Set();  // 'YYYY-MM-DD'
+function checkinMapLoadBackend(){
+  if(!CONFIG.API_URL || !CONFIG.auth || !CONFIG.auth.token || CONFIG.auth.role !== 'admin') return Promise.resolve();
+  return authApiPost('qlnvkd_checkins', {token: CONFIG.auth.token}).then(d => {
+    if(d && d.ok && Array.isArray(d.items)) checkinNvkdBackendCache = d.items;
+    checkinMapRefreshMarkers();
+  });
+}
+function checkinMapAllRecords(){
+  const seen = new Set(); const out = [];
+  checkinNvkdBackendCache.concat(checkinNvkdLocal).forEach(c => {
+    const key = (c.username||'') + '|' + (c.thoiGian||'');
+    if(seen.has(key)) return;
+    seen.add(key); out.push(c);
+  });
+  return out;
+}
+function qlnvkdApplySidebarVisibility(){
+  const sec = document.getElementById('secCheckinMap');
+  if(!sec) return;
+  const on = !!(CONFIG.auth && CONFIG.auth.role === 'admin');
+  sec.style.display = on ? 'block' : 'none';
+  const note = document.getElementById('checkinMapDemoNote');
+  if(note) note.textContent = CONFIG.API_URL ? '' : '⚠ Chưa kết nối backend thật — chỉ thấy check-in đã bấm trên máy này (chế độ DEMO), chưa gộp được check-in từ máy nhân viên khác.';
+  if(on){ renderCheckinMapTree(); checkinMapLoadBackend(); }
+}
+function checkinMapRefreshMarkers(){
+  if(!checkinMapLayer){ checkinMapLayer = L.layerGroup().addTo(map); }
+  checkinMapLayer.clearLayers();
+  const cnt = document.getElementById('cnt_checkin_map');
+  if(!checkinMapSelectedNv.size){ if(cnt) cnt.textContent = '0'; return; }
+  const recs = checkinMapAllRecords().filter(c => {
+    if(!checkinMapSelectedNv.has(String(c.username||'').toLowerCase())) return false;
+    if(checkinMapSelectedDates.size && !checkinMapSelectedDates.has(String(c.thoiGian||'').slice(0,10))) return false;
+    return true;
+  });
+  recs.forEach(c => {
+    const lat = parseFloat(c.lat), lon = parseFloat(c.lon);
+    if(!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    const mk = L.circleMarker([lat, lon], {radius:7, color:'#fff', weight:2, fillColor:'#e91e8c', fillOpacity:.9, bubblingMouseEvents:false});
+    mk.bindPopup(`<b>👤 ${escapeHtmlLite(c.hoTen||c.username||'')}</b>`+
+      `${c.vung ? '<br>📁 '+escapeHtmlLite(c.vung) : ''}`+
+      `<br>🕒 ${c.thoiGian ? new Date(c.thoiGian).toLocaleString('vi-VN') : '-'}`+
+      `<br>📍 ${escapeHtmlLite(c.diaChi || '(chưa xác định được địa chỉ)')}`+
+      `<br><span style="color:var(--mf-muted);font-size:11px;">Sai số GPS ±${c.doChinhXac ?? '?'} m</span>`);
+    checkinMapLayer.addLayer(mk);
+  });
+  if(cnt) cnt.textContent = recs.length;
+}
+function renderCheckinMapTree(){
+  const box = document.getElementById('checkinMapTree');
+  if(!box) return;
+  if(!qlnvkdRoster.length){ box.innerHTML = '<div class="small-note" style="padding:6px 2px;">Chưa có danh sách NVKD — Admin import Form 8 ở tab "QLNVKD".</div>'; return; }
+  const groups = new Map();
+  qlnvkdRoster.forEach(r => {
+    const v = (r.vung || '').trim() || '(Chưa phân vùng)';
+    if(!groups.has(v)) groups.set(v, []);
+    groups.get(v).push(r);
+  });
+  const names = [...groups.keys()].sort((a,b) => a.localeCompare(b,'vi'));
+  const frag = document.createDocumentFragment();
+  names.forEach(v => frag.appendChild(renderCheckinVungNode(v, groups.get(v))));
+  box.innerHTML = '';
+  box.appendChild(frag);
+}
+function renderCheckinVungNode(vung, list){
+  const wrap = document.createElement('div');
+  const row = document.createElement('div');
+  row.className = 'tree-row';
+  row.innerHTML = `<span class="tree-caret">▸</span>`+
+    `<input type="checkbox" class="tree-chk cim-vung-chk">`+
+    `<span class="tree-label" title="${escapeHtmlLite(vung)}">📁 ${escapeHtmlLite(vung)} (${list.length})</span>`;
+  const vungChk = row.querySelector('.cim-vung-chk');
+  const kids = document.createElement('div');
+  kids.className = 'tree-children';
+  kids.style.display = 'none';
+  list.forEach(nv => {
+    const uname = String(nv.username||'').toLowerCase();
+    const r = document.createElement('div');
+    r.className = 'tree-row';
+    r.style.paddingLeft = '12px';
+    r.innerHTML = `<span class="tree-caret-spacer"></span>`+
+      `<input type="checkbox" class="tree-chk cim-nv-chk" data-username="${uname.replace(/"/g,'&quot;')}" ${checkinMapSelectedNv.has(uname)?'checked':''}>`+
+      `<span class="tree-label">👤 ${escapeHtmlLite(nv.hoTen || nv.username || '(chưa rõ tên)')}</span>`;
+    const nvChk = r.querySelector('.cim-nv-chk');
+    nvChk.addEventListener('change', () => {
+      if(nvChk.checked) checkinMapSelectedNv.add(uname); else checkinMapSelectedNv.delete(uname);
+      const all = [...kids.querySelectorAll('.cim-nv-chk')];
+      vungChk.checked = all.length > 0 && all.every(el => el.checked);
+      vungChk.indeterminate = all.some(el => el.checked) && !vungChk.checked;
+      checkinMapRefreshMarkers();
+    });
+    kids.appendChild(r);
+  });
+  vungChk.addEventListener('change', () => {
+    kids.querySelectorAll('.cim-nv-chk').forEach(el => {
+      el.checked = vungChk.checked;
+      const u = el.dataset.username;
+      if(vungChk.checked) checkinMapSelectedNv.add(u); else checkinMapSelectedNv.delete(u);
+    });
+    checkinMapRefreshMarkers();
+  });
+  wrap.appendChild(row);
+  wrap.appendChild(kids);
+  row.querySelector('.tree-caret').addEventListener('click', () => {
+    const expanded = kids.style.display !== 'none';
+    kids.style.display = expanded ? 'none' : 'block';
+    row.querySelector('.tree-caret').textContent = expanded ? '▸' : '▾';
+  });
+  return wrap;
+}
+/* Ô tìm tên nhân viên — chỉ để TÌM/BẬT nhanh 1 người trong cây, không phải bộ lọc riêng (cây vẫn là
+   nguồn sự thật, giống FTTx/Trạm CSHT). Bấm kết quả = tự tick người đó rồi vẽ lại cây. */
+document.getElementById('checkinMapSearchBox').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  const box = document.getElementById('checkinMapSearchResults');
+  box.innerHTML = '';
+  if(q.length < 1) return;
+  const out = qlnvkdRoster.filter(r => String(r.hoTen||'').toLowerCase().includes(q) || String(r.username||'').toLowerCase().includes(q)).slice(0, 25);
+  if(!out.length){ box.innerHTML = '<div class="ss-sub" style="cursor:default;">Không tìm thấy nhân viên nào.</div>'; return; }
+  out.forEach(r => {
+    const d = document.createElement('div');
+    d.innerHTML = `<span>👤</span><span><b>${escapeHtmlLite(r.hoTen||r.username)}</b><div class="ss-sub">${escapeHtmlLite(r.vung||'')}</div></span>`;
+    d.onclick = () => {
+      checkinMapSelectedNv.add(String(r.username||'').toLowerCase());
+      renderCheckinMapTree(); checkinMapRefreshMarkers();
+      box.innerHTML = ''; document.getElementById('checkinMapSearchBox').value = '';
+    };
+    box.appendChild(d);
+  });
+});
+/* Nút "📅 Ngày" — cho phép chọn NHIỀU ngày (hiện dạng chip), dùng input type=date (có sẵn logo lịch
+   của trình duyệt) — đúng yêu cầu "tự điền ngày hoặc có logo quyển lịch". */
+document.getElementById('btnCheckinMapDate').onclick = () => {
+  const inp = document.getElementById('checkinMapDateInput');
+  inp.style.display = inp.style.display === 'none' ? 'block' : 'none';
+  if(inp.style.display === 'block'){ inp.focus(); if(inp.showPicker) try{ inp.showPicker(); }catch(e){} }
+};
+function checkinMapRenderDateChips(){
+  const box = document.getElementById('checkinMapDateChips');
+  box.innerHTML = '';
+  [...checkinMapSelectedDates].sort().forEach(d => {
+    const c = document.createElement('span');
+    c.className = 'flt-chip';
+    c.innerHTML = `<b>Ngày:</b> ${d.split('-').reverse().join('/')} <span class="x" title="Bỏ">✕</span>`;
+    c.querySelector('.x').onclick = () => { checkinMapSelectedDates.delete(d); checkinMapRenderDateChips(); checkinMapRefreshMarkers(); };
+    box.appendChild(c);
+  });
+  if(checkinMapSelectedDates.size){
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'flt-clear'; btn.textContent = '✕ Xoá hết ngày';
+    btn.onclick = () => { checkinMapSelectedDates.clear(); checkinMapRenderDateChips(); checkinMapRefreshMarkers(); };
+    box.appendChild(btn);
+  }
+}
+document.getElementById('checkinMapDateInput').addEventListener('change', function(){
+  if(this.value){ checkinMapSelectedDates.add(this.value); checkinMapRenderDateChips(); checkinMapRefreshMarkers(); }
+  this.value = '';
+  this.style.display = 'none';
 });
 
 /* ---------- Popup thuê bao: (1) thông tin, (2) sửa toạ độ ---------- */

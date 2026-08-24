@@ -3250,7 +3250,7 @@ function renderCheckinNvkdPanel(panelEl){
       checkinNvkdLocal.push(rec); checkinNvkdSaveLocal();
       banner.innerHTML = (d && d.ok)
         ? '<div class="banner banner-ok">✅ Đã ghi nhận check in' + (diaChi ? ' tại ' + diaChi : '') + '.</div>'
-        : '<div class="banner banner-warn">⚠ Chưa kết nối backend thật — đã ghi tạm trong máy này' + (diaChi ? ' (' + diaChi + ')' : '') + ', chưa vào bảng QLNVKD chung.</div>';
+        : '<div class="banner banner-warn">⚠ ' + ((d && d.error) || 'Chưa kết nối backend thật') + ' — đã ghi tạm trong máy này' + (diaChi ? ' (' + diaChi + ')' : '') + ', chưa vào bảng QLNVKD chung.</div>';
     });
   };
 }

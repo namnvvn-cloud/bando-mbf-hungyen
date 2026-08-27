@@ -7663,7 +7663,9 @@ function checkinPersonIcon_(){
   if(_checkinPersonIcon) return _checkinPersonIcon;
   _checkinPersonIcon = L.divIcon({
     className: 'checkin-person-icon',
-    html: '<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#e91e8c;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45);"></div>'+
+    // GĐ13 27/08/2026: đổi mầu icon check-in NVKD sang xanh lá cây tươi theo yêu cầu (trước là hồng) —
+    // dễ nhìn hơn trên nền bản đồ, vẫn tách biệt hoàn toàn với mầu đỏ/cam/xanh lá đậm của icon trạm.
+    html: '<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#22c55e;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45);"></div>'+
           '<div style="position:absolute;top:2px;left:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;">🧍</div>',
     iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-24]
   });
@@ -7718,11 +7720,15 @@ function renderCheckinRootNode_(vungEntries){
   });
   return wrap;
 }
-/* Đồng bộ trạng thái tick/indeterminate của checkbox Vùng + checkbox gốc "Toàn bộ nhân viên" dựa theo
-   đúng những nhân viên đang được tick trong cây — gọi lại sau MỌI thay đổi tick ở bất kỳ cấp nào. */
+/* Đồng bộ TOÀN BỘ checkbox trong cây (nhân viên + Vùng + gốc "Toàn bộ nhân viên") đúng theo
+   checkinMapSelectedNv — nguồn sự thật duy nhất. Gọi lại sau MỌI thay đổi tick ở bất kỳ cấp nào,
+   hoặc sau khi đổi checkinMapSelectedNv bằng code (VD bấm đúp 1 nhân viên) MÀ KHÔNG dựng lại cây. */
 function checkinMapSyncTreeCheckboxStates_(){
   const box = document.getElementById('checkinMapTree');
   if(!box) return;
+  box.querySelectorAll('.cim-nv-chk').forEach(el => {
+    el.checked = checkinMapSelectedNv.has(el.dataset.username);
+  });
   box.querySelectorAll('.cim-vung-node').forEach(vnode => {
     const nvChks = [...vnode.querySelectorAll('.cim-nv-chk')];
     const vungChk = vnode.querySelector('.cim-vung-chk');
@@ -7763,13 +7769,17 @@ function renderCheckinVungNode(vung, list){
       checkinMapSyncTreeCheckboxStates_();
       checkinMapRefreshMarkers();
     });
-    // GĐ12 27/08/2026: bấm đúp vào tên nhân viên -> chỉ chọn riêng người đó, bản đồ tự pan/zoom tới
-    // đúng các vị trí check-in của họ (logic tự rê bản đồ khi chỉ 1 người được chọn đã có sẵn ở
-    // checkinMapRefreshMarkers()).
+    // GĐ12 27/08/2026, sửa lại GĐ13: bấm đúp vào tên nhân viên -> CHỈ chọn riêng người đó, bản đồ tự
+    // pan/zoom tới đúng vị trí check-in của họ (logic tự rê bản đồ khi chỉ 1 người được chọn đã có sẵn
+    // ở checkinMapRefreshMarkers()). Lúc đầu code gọi renderCheckinMapTree() để cập nhật lại checkbox
+    // -> BỊ LỖI: dựng lại TOÀN BỘ cây làm mọi folder Tổ/Vùng tự đóng về trạng thái mặc định (mất luôn
+    // folder đang mở), đúng như anh Nam báo "tự đóng list folder". Đúng kiểu cây Trạm CSHT/FTTx (xem
+    // renderTreeNode() + navigateToLeaf() ở trên) — bấm đúp CHỈ đổi dữ liệu chọn + tick lại checkbox
+    // tại chỗ bằng checkinMapSyncTreeCheckboxStates_(), KHÔNG đụng vào cấu trúc cây/trạng thái đóng-mở.
     r.querySelector('.tree-label').addEventListener('dblclick', () => {
       checkinMapSelectedNv.clear();
       checkinMapSelectedNv.add(uname);
-      renderCheckinMapTree();
+      checkinMapSyncTreeCheckboxStates_();
       checkinMapRefreshMarkers();
     });
     kids.appendChild(r);

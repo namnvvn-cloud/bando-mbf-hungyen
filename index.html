@@ -3181,7 +3181,14 @@ function qlnvkdLoadFromBackend(){
   if(!CONFIG.API_URL || !CONFIG.auth || !CONFIG.auth.token || CONFIG.auth.role !== 'admin') return;
   authApiPost('qlnvkd_list', {token: CONFIG.auth.token}).then(d => {
     if(d && d.ok && Array.isArray(d.items)){ qlnvkdRoster = d.items; qlnvkdSaveRosterLocal(); if(typeof renderCheckinMapTree==='function') renderCheckinMapTree(); }
+    if(typeof qlnvkdRenderSummaryTable === 'function') qlnvkdRenderSummaryTable();
   });
+  // Nạp check-in THẬT của TOÀN BỘ NVKD (mọi máy/mọi người) — bảng tổng hợp và sheet "Tổng hợp" khi
+  // xuất Excel đều tính từ đây (checkinNvkdBackendCache), KHÔNG phải checkinNvkdLocal (chỉ có check-in
+  // bấm trên chính máy này) — sửa lỗi 24/08/2026: bảng tổng hợp trước đó chỉ hiện đúng người test trên
+  // máy đang mở web, các NVKD khác check-in trên máy/điện thoại riêng không lên số dù chi tiết xuất
+  // Excel vẫn có đủ (chi tiết đã lấy đúng từ backend, chỉ riêng bảng tổng hợp bị bỏ sót).
+  if(typeof checkinMapLoadBackend === 'function') checkinMapLoadBackend();
 }
 /** Reverse-geocode toạ độ -> chuỗi "thôn/xóm - phường/xã - tỉnh" qua Nominatim (OpenStreetMap,
     CÙNG nguồn miễn phí đang dùng cho ô tìm địa chỉ trên bản đồ — không phải Google Maps API).
@@ -6675,7 +6682,10 @@ document.getElementById('btnQlnvkdImportConfirm').onclick = () => {
     }
   });
 };
-function qlnvkdCountsFor_(username){
+/** Đếm check-in theo LỊCH (hôm nay/tuần này Thứ2→CN/tháng này/năm này) từ 1 danh sách check-in
+    CHO SẴN — dùng chung cho cả bảng tổng hợp trên màn hình lẫn sheet "Tổng hợp" khi xuất Excel, để
+    2 nơi luôn khớp số với nhau (cùng tính từ đúng 1 mảng dữ liệu tại đúng 1 thời điểm). */
+function qlnvkdCountsFromList_(username, list){
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const dow = (now.getDay() + 6) % 7; // Thứ 2 = 0 ... Chủ nhật = 6 (tuần ISO)
@@ -6683,7 +6693,7 @@ function qlnvkdCountsFor_(username){
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfYear = new Date(now.getFullYear(), 0, 1);
   let ngay=0, tuan=0, thang=0, nam=0;
-  checkinNvkdLocal.forEach(c => {
+  (list||[]).forEach(c => {
     if(String(c.username||'').toLowerCase() !== String(username||'').toLowerCase()) return;
     const t = new Date(c.thoiGian);
     if(t >= startOfDay) ngay++;
@@ -6692,6 +6702,15 @@ function qlnvkdCountsFor_(username){
     if(t >= startOfYear) nam++;
   });
   return {ngay, tuan, thang, nam};
+}
+/** Sửa lỗi 24/08/2026: TRƯỚC ĐÂY hàm này chỉ đếm từ checkinNvkdLocal (check-in bấm trên chính máy
+    đang mở web) nên bảng tổng hợp QLNVKD chỉ hiện đúng người vừa test trên máy đó, các NVKD khác
+    check-in trên điện thoại riêng không lên số — dù chi tiết xuất Excel vẫn lấy đúng từ backend.
+    GIỜ ưu tiên checkinNvkdBackendCache (nạp từ action qlnvkd_checkins, gộp check-in CỦA TẤT CẢ mọi
+    người) khi đã nối backend thật; chỉ dùng checkinNvkdLocal khi chưa nối backend (chế độ DEMO). */
+function qlnvkdCountsFor_(username){
+  const list = (CONFIG.API_URL && typeof checkinNvkdBackendCache !== 'undefined') ? checkinNvkdBackendCache : checkinNvkdLocal;
+  return qlnvkdCountsFromList_(username, list);
 }
 function qlnvkdRenderSummaryTable(){
   const tb = document.getElementById('qlnvkdSummaryTableBody');
@@ -6709,8 +6728,10 @@ document.getElementById('btnQlnvkdRefresh').onclick = () => { qlnvkdLoadFromBack
 document.getElementById('btnQlnvkdExport').onclick = () => {
   if(!qlnvkdRoster.length){ alert('Chưa có danh sách NVKD để xuất.'); return; }
   const doExport = (detailRows) => {
+    // Tính sheet "Tổng hợp" từ CHÍNH detailRows vừa lấy về (không gọi lại qlnvkdCountsFor_/cache
+    // riêng) để 2 sheet trong cùng 1 lần xuất luôn khớp số với nhau tuyệt đối.
     const summaryAoa = [['STT','Username','Họ tên','Tổ','Checkin ngày','Checkin tuần','Checkin tháng','Checkin năm']]
-      .concat(qlnvkdRoster.map((r,i) => { const c = qlnvkdCountsFor_(r.username); return [i+1, r.username||'', r.hoTen||'', r.vung||'', c.ngay, c.tuan, c.thang, c.nam]; }));
+      .concat(qlnvkdRoster.map((r,i) => { const c = qlnvkdCountsFromList_(r.username, detailRows); return [i+1, r.username||'', r.hoTen||'', r.vung||'', c.ngay, c.tuan, c.thang, c.nam]; }));
     const detailAoa = [['Thời gian','Username','Họ tên','SĐT','Tổ/Vùng','Địa chỉ','Lat','Lon','Sai số GPS (m)']]
       .concat(detailRows.map(c => [c.thoiGian, c.username||'', c.hoTen||'', c.sdt||'', c.vung||'', c.diaChi||'', c.lat, c.lon, c.doChinhXac]));
     const wb = XLSX.utils.book_new();
@@ -7614,18 +7635,39 @@ function checkinMapRefreshMarkers(){
     if(checkinMapSelectedDates.size && !checkinMapSelectedDates.has(String(c.thoiGian||'').slice(0,10))) return false;
     return true;
   });
+  const bounds = [];
   recs.forEach(c => {
     const lat = parseFloat(c.lat), lon = parseFloat(c.lon);
     if(!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-    const mk = L.circleMarker([lat, lon], {radius:7, color:'#fff', weight:2, fillColor:'#e91e8c', fillOpacity:.9, bubblingMouseEvents:false});
+    // GĐ12 24/08/2026: đổi từ chấm tròn sang icon hình người — phân biệt rõ với icon paddle của
+    // trạm CSHT/FTTx (xem checkinPersonIcon_ bên dưới).
+    const mk = L.marker([lat, lon], {icon: checkinPersonIcon_(), bubblingMouseEvents:false});
     mk.bindPopup(`<b>👤 ${escapeHtmlLite(c.hoTen||c.username||'')}</b>`+
       `${c.vung ? '<br>📁 '+escapeHtmlLite(c.vung) : ''}`+
       `<br>🕒 ${c.thoiGian ? new Date(c.thoiGian).toLocaleString('vi-VN') : '-'}`+
       `<br>📍 ${escapeHtmlLite(c.diaChi || '(chưa xác định được địa chỉ)')}`+
       `<br><span style="color:var(--mf-muted);font-size:11px;">Sai số GPS ±${c.doChinhXac ?? '?'} m</span>`);
     checkinMapLayer.addLayer(mk);
+    bounds.push([lat, lon]);
   });
   if(cnt) cnt.textContent = recs.length;
+  // Chỉ tự rê bản đồ tới khi có ĐÚNG 1 nhân viên đang chọn (bấm đúp) — chọn nhiều người thì giữ
+  // nguyên khung nhìn hiện tại, tránh nhảy bản đồ ngoài ý muốn khi đang xem nhiều người cùng lúc.
+  if(bounds.length && checkinMapSelectedNv.size === 1){
+    if(bounds.length === 1) map.setView(bounds[0], Math.max(map.getZoom(), 15));
+    else map.fitBounds(bounds, {padding:[40,40]});
+  }
+}
+let _checkinPersonIcon = null;
+function checkinPersonIcon_(){
+  if(_checkinPersonIcon) return _checkinPersonIcon;
+  _checkinPersonIcon = L.divIcon({
+    className: 'checkin-person-icon',
+    html: '<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#e91e8c;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45);"></div>'+
+          '<div style="position:absolute;top:2px;left:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;">🧍</div>',
+    iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-24]
+  });
+  return _checkinPersonIcon;
 }
 function renderCheckinMapTree(){
   const box = document.getElementById('checkinMapTree');
@@ -7638,13 +7680,66 @@ function renderCheckinMapTree(){
     groups.get(v).push(r);
   });
   const names = [...groups.keys()].sort((a,b) => a.localeCompare(b,'vi'));
-  const frag = document.createDocumentFragment();
-  names.forEach(v => frag.appendChild(renderCheckinVungNode(v, groups.get(v))));
   box.innerHTML = '';
-  box.appendChild(frag);
+  box.appendChild(renderCheckinRootNode_(names.map(v => [v, groups.get(v)])));
+  checkinMapSyncTreeCheckboxStates_();
+}
+/* GĐ12 27/08/2026: node cha "Toàn bộ nhân viên" ở gốc cây — mặc định MỞ SẴN (đúng yêu cầu "mở ra lùi
+   lại mới là các folder con"), tick 1 lần là chọn/bỏ chọn hết toàn bộ nhân viên. Bên trong vẫn giữ
+   nguyên các node Vùng/Tổ + nhân viên như cũ, không đổi hành vi cũ của các node con. */
+function renderCheckinRootNode_(vungEntries){
+  const wrap = document.createElement('div');
+  const total = vungEntries.reduce((s, e) => s + e[1].length, 0);
+  const row = document.createElement('div');
+  row.className = 'tree-row';
+  row.innerHTML = `<span class="tree-caret">▾</span>`+
+    `<input type="checkbox" class="tree-chk cim-root-chk">`+
+    `<span class="tree-label"><b>🗂 Toàn bộ nhân viên (${total})</b></span>`;
+  const rootChk = row.querySelector('.cim-root-chk');
+  const kids = document.createElement('div');
+  kids.className = 'tree-children';
+  kids.style.display = 'block'; // mặc định mở sẵn
+  vungEntries.forEach(e => kids.appendChild(renderCheckinVungNode(e[0], e[1])));
+  rootChk.addEventListener('change', () => {
+    kids.querySelectorAll('.cim-nv-chk').forEach(el => {
+      el.checked = rootChk.checked;
+      const u = el.dataset.username;
+      if(rootChk.checked) checkinMapSelectedNv.add(u); else checkinMapSelectedNv.delete(u);
+    });
+    checkinMapSyncTreeCheckboxStates_();
+    checkinMapRefreshMarkers();
+  });
+  wrap.appendChild(row);
+  wrap.appendChild(kids);
+  row.querySelector('.tree-caret').addEventListener('click', () => {
+    const expanded = kids.style.display !== 'none';
+    kids.style.display = expanded ? 'none' : 'block';
+    row.querySelector('.tree-caret').textContent = expanded ? '▸' : '▾';
+  });
+  return wrap;
+}
+/* Đồng bộ trạng thái tick/indeterminate của checkbox Vùng + checkbox gốc "Toàn bộ nhân viên" dựa theo
+   đúng những nhân viên đang được tick trong cây — gọi lại sau MỌI thay đổi tick ở bất kỳ cấp nào. */
+function checkinMapSyncTreeCheckboxStates_(){
+  const box = document.getElementById('checkinMapTree');
+  if(!box) return;
+  box.querySelectorAll('.cim-vung-node').forEach(vnode => {
+    const nvChks = [...vnode.querySelectorAll('.cim-nv-chk')];
+    const vungChk = vnode.querySelector('.cim-vung-chk');
+    if(!vungChk) return;
+    vungChk.checked = nvChks.length > 0 && nvChks.every(el => el.checked);
+    vungChk.indeterminate = nvChks.some(el => el.checked) && !vungChk.checked;
+  });
+  const allNv = [...box.querySelectorAll('.cim-nv-chk')];
+  const rootChk = box.querySelector('.cim-root-chk');
+  if(rootChk){
+    rootChk.checked = allNv.length > 0 && allNv.every(el => el.checked);
+    rootChk.indeterminate = allNv.some(el => el.checked) && !rootChk.checked;
+  }
 }
 function renderCheckinVungNode(vung, list){
   const wrap = document.createElement('div');
+  wrap.className = 'cim-vung-node';
   const row = document.createElement('div');
   row.className = 'tree-row';
   row.innerHTML = `<span class="tree-caret">▸</span>`+
@@ -7661,13 +7756,20 @@ function renderCheckinVungNode(vung, list){
     r.style.paddingLeft = '12px';
     r.innerHTML = `<span class="tree-caret-spacer"></span>`+
       `<input type="checkbox" class="tree-chk cim-nv-chk" data-username="${uname.replace(/"/g,'&quot;')}" ${checkinMapSelectedNv.has(uname)?'checked':''}>`+
-      `<span class="tree-label">👤 ${escapeHtmlLite(nv.hoTen || nv.username || '(chưa rõ tên)')}</span>`;
+      `<span class="tree-label" title="Bấm đúp để chỉ xem riêng vị trí check-in của nhân viên này">👤 ${escapeHtmlLite(nv.hoTen || nv.username || '(chưa rõ tên)')}</span>`;
     const nvChk = r.querySelector('.cim-nv-chk');
     nvChk.addEventListener('change', () => {
       if(nvChk.checked) checkinMapSelectedNv.add(uname); else checkinMapSelectedNv.delete(uname);
-      const all = [...kids.querySelectorAll('.cim-nv-chk')];
-      vungChk.checked = all.length > 0 && all.every(el => el.checked);
-      vungChk.indeterminate = all.some(el => el.checked) && !vungChk.checked;
+      checkinMapSyncTreeCheckboxStates_();
+      checkinMapRefreshMarkers();
+    });
+    // GĐ12 27/08/2026: bấm đúp vào tên nhân viên -> chỉ chọn riêng người đó, bản đồ tự pan/zoom tới
+    // đúng các vị trí check-in của họ (logic tự rê bản đồ khi chỉ 1 người được chọn đã có sẵn ở
+    // checkinMapRefreshMarkers()).
+    r.querySelector('.tree-label').addEventListener('dblclick', () => {
+      checkinMapSelectedNv.clear();
+      checkinMapSelectedNv.add(uname);
+      renderCheckinMapTree();
       checkinMapRefreshMarkers();
     });
     kids.appendChild(r);
@@ -7678,6 +7780,7 @@ function renderCheckinVungNode(vung, list){
       const u = el.dataset.username;
       if(vungChk.checked) checkinMapSelectedNv.add(u); else checkinMapSelectedNv.delete(u);
     });
+    checkinMapSyncTreeCheckboxStates_();
     checkinMapRefreshMarkers();
   });
   wrap.appendChild(row);
